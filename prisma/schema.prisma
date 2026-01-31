@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite" // Ambiente local. Em produção (Vercel), usaremos 'postgresql' (Vercel Postgres)
+  url      = "file:./dev.db"
+}
+
+model Group {
+  id        String    @id @default(uuid())
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  users     User[]
+  expenses  Expense[]
+}
+
+model User {
+  id           String               @id @default(uuid())
+  name         String
+  pin          String               @default("0000") // Default temporário para migração, na prática será obrigatório
+  isAdmin      Boolean              @default(false)
+  group        Group                @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId      String
+  expensesPaid Expense[]            @relation("PaidBy")
+  expensesPart ExpenseParticipant[]
+}
+
+model Expense {
+  id           String               @id @default(uuid())
+  description  String
+  amount       Float
+  paidBy       User                 @relation("PaidBy", fields: [paidById], references: [id], onDelete: Cascade)
+  paidById     String
+  group        Group                @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId      String
+  participants ExpenseParticipant[]
+  createdAt    DateTime             @default(now())
+}
+
+model ExpenseParticipant {
+  expense   Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  expenseId String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+
+  @@id([expenseId, userId])
+}
