@@ -11,7 +11,7 @@ graph TD
     A[Usuário] -->|Cria Grupo + PIN| B(Grupo Seguro)
     B -->|Link de Convite| C[Convidados]
     C -->|Entram apenas com Nome| B
-    B -->|Adicionar Despesas| D[(Database SQLite)]
+    B -->|Adicionar Despesas| D[(Database Postgres)]
     D --> E[Cálculo Automático]
     E -->|Minimiza Transações| F[Relatório de Quem Paga Quem]
 ```
@@ -28,7 +28,7 @@ graph TD
 
 - **Frontend:** Next.js 14 (App Router), React, Tailwind CSS.
 - **Backend:** Next.js Server Actions.
-- **Database:** SQLite com Prisma ORM.
+- **Database:** PostgreSQL (Supabase) com Prisma ORM.
 
 ## 📦 Instalação e Execução
 
@@ -37,17 +37,20 @@ graph TD
    npm install
    ```
 
-2. Configure o Banco de Dados (SQLite):
+2. Configure as variáveis de ambiente:
+   Renomeie `.env.example` para `.env` e adicione suas credenciais do Supabase.
+
+3. Configure o Banco de Dados:
    ```bash
    npx prisma db push
    ```
 
-3. Geração do Cliente Prisma:
+4. Geração do Cliente Prisma:
    ```bash
    npx prisma generate
    ```
 
-4. Rodar em Desenvolvimento:
+5. Rodar em Desenvolvimento:
    ```bash
    npm run dev
    ```
