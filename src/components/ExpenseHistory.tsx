@@ -75,11 +75,11 @@ export default function ExpenseHistory({ users, expenses, removeExpense, current
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-start">
-                            <p className="font-semibold text-slate-100 truncate pr-2 capitalize">
+                        <div className="flex justify-between items-start gap-2">
+                            <p className="font-semibold text-slate-100 truncate capitalize flex-1 min-w-0" title={expense.description}>
                                 {expense.description}
                             </p>
-                            <span className="text-green-400 font-bold whitespace-nowrap">
+                            <span className="text-green-400 font-bold whitespace-nowrap flex-shrink-0">
                                 {expense.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                             </span>
                         </div>
