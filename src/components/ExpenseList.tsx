@@ -38,7 +38,11 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
 
   // Initialize date
   useEffect(() => {
-    setDate(new Date().toISOString().split('T')[0])
+    const today = new Date()
+    const dd = String(today.getDate()).padStart(2, '0')
+    const mm = String(today.getMonth() + 1).padStart(2, '0')
+    const yyyy = today.getFullYear()
+    setDate(`${dd}/${mm}/${yyyy}`)
   }, [])
 
   // Set default payer to current user
@@ -47,24 +51,53 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
       setPaidBy(currentUserId)
     }
   }, [currentUserId])
+  
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let v = e.target.value.replace(/\D/g, '')
+    if (v.length > 8) v = v.slice(0, 8)
+    
+    if (v.length > 4) {
+        v = `${v.slice(0, 2)}/${v.slice(2, 4)}/${v.slice(4)}`
+    } else if (v.length > 2) {
+        v = `${v.slice(0, 2)}/${v.slice(2)}`
+    }
+    setDate(v)
+  }
 
   const handleAddExpense = () => {
-    if (description.trim() && amount && paidBy && participants.length > 0 && date) {
+    if (description.trim() && amount && paidBy && participants.length > 0 && date.length === 10) {
       const parsedAmount = parseFloat(amount.replace(',', '.'))
       if (isNaN(parsedAmount)) return
       
+      const [day, month, year] = date.split('/')
+      // Basic validation
+      if (!day || !month || !year) return
+
+      // Create format for backend (YYYY-MM-DD)
+      const isoDate = `${year}-${month}-${day}`
+
       addExpense({
         description: description.trim(),
         amount: parsedAmount,
         paidBy,
-        date,
+        date: isoDate,
         participants
       })
+      
+      // Reset form
       setDescription('')
       setAmount('')
-      setDate(new Date().toISOString().split('T')[0])
-      setPaidBy(currentUserId || '') // Reset to current user
-      setParticipants(users.map(u => u.id)) // Reset to all users
+      // Reset date to today
+      const today = new Date()
+      const dd = String(today.getDate()).padStart(2, '0')
+      const mm = String(today.getMonth() + 1).padStart(2, '0')
+      const yyyy = today.getFullYear()
+      setDate(`${dd}/${mm}/${yyyy}`)
+      
+      setPaidBy(currentUserId || '') 
+      setParticipants(users.map(u => u.id))
+    } else if (date.length !== 10) {
+        alert('Data inválida. Use o formato DD/MM/AAAA')
     }
   }
 
@@ -98,9 +131,12 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
           className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-white placeholder-slate-400"
         />
         <input
-          type="date"
+          type="text"
+          inputMode="numeric"
+          maxLength={10}
+          placeholder="DD/MM/AAAA"
           value={date}
-          onChange={(e) => setDate(e.target.value)}
+          onChange={handleDateChange}
           className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-white placeholder-slate-400"
         />
         <select
