@@ -34,8 +34,8 @@ const getCategoryIcon = (description: string) => {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, "")
   
-  if (normalized.match(/almoco|jantar|comida|lanche|restaurante|ifood|mercado|feira|bar|cerveja|drink|churrasco|pizza|burguer|burger|agua|acai|sorvete|alimenta/)) return '🍔'
   if (normalized.match(/uber|99|taxi|gasolina|estacionamento|pedagio|onibus|metro|passagem|combustivel|transporte/)) return '🚗'
+  if (normalized.match(/almoco|jantar|comida|lanche|restaurante|ifood|mercado|feira|\bbar\b|cerveja|drink|churrasco|pizza|burguer|burger|agua|acai|sorvete|alimenta/)) return '🍔'
   if (normalized.match(/hotel|pousada|airbnb|hostel|resort|motel|hospedagem/)) return '🏨'
   if (normalized.match(/praia|parque|viagem|clube|piscina|lazer/)) return '🏖️'
   if (normalized.match(/show|festa|ingresso|netflix|spotify|cinema|jogo|entretenimento/)) return '🎟️'
