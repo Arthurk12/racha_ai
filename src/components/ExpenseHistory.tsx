@@ -25,14 +25,19 @@ interface ExpenseHistoryProps {
 }
 
 const getCategoryIcon = (description: string) => {
-  const lower = description.toLowerCase()
+  // Normalize: lowercase and remove accents (e.g., 'á' -> 'a', 'ç' -> 'c')
+  const normalized = description
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, "")
   
-  if (lower.match(/almoço|jantar|comida|lanche|restaurante|ifood|mercado|feira|bar|cerveja|drink|churrasco|pizza|burguer|burger|agua|açaí|sorvete|alimenta/)) return '🍔'
-  if (lower.match(/uber|99|taxi|gasolina|estacionamento|pedagio|onibus|metro|passagem|combustivel|transporte/)) return '🚗'
-  if (lower.match(/praia|parque|viagem|hotel|pousada|clube|piscina|lazer/)) return '🏖️'
-  if (lower.match(/show|festa|ingresso|netflix|spotify|cinema|jogo|entretenimento/)) return '🎟️'
-  if (lower.match(/farmacia|remedio|medico|hospital|consulta|exame|saude/)) return '💊'
-  if (lower.match(/conserto|mecanico|bateria|pneu|emergencia/)) return '🚨'
+  if (normalized.match(/almoco|jantar|comida|lanche|restaurante|ifood|mercado|feira|bar|cerveja|drink|churrasco|pizza|burguer|burger|agua|acai|sorvete|alimenta/)) return '🍔'
+  if (normalized.match(/uber|99|taxi|gasolina|estacionamento|pedagio|onibus|metro|passagem|combustivel|transporte/)) return '🚗'
+  if (normalized.match(/hotel|pousada|airbnb|hostel|resort|motel|hospedagem/)) return '🏨'
+  if (normalized.match(/praia|parque|viagem|clube|piscina|lazer/)) return '🏖️'
+  if (normalized.match(/show|festa|ingresso|netflix|spotify|cinema|jogo|entretenimento/)) return '🎟️'
+  if (normalized.match(/farmacia|remedio|medico|hospital|consulta|exame|saude/)) return '💊'
+  if (normalized.match(/conserto|mecanico|bateria|pneu|emergencia/)) return '🚨'
   
   return '📝'
 }
