@@ -175,9 +175,10 @@ export async function removeExpense(groupId: string, expenseId: string) {
 export async function updateExpense(groupId: string, expenseId: string, formData: FormData, requesterId: string) {
     const amountStr = formData.get('amount') as string
     const dateStr = formData.get('date') as string
+    const participantIds = formData.getAll('participants') as string[]
     
     // Validate
-    if (!amountStr || !dateStr) return { error: 'Dados inválidos' }
+    if (!amountStr || !dateStr || participantIds.length === 0) return { error: 'Dados inválidos' }
 
     const amount = parseFloat(amountStr)
     const date = new Date(dateStr)
@@ -204,7 +205,11 @@ export async function updateExpense(groupId: string, expenseId: string, formData
         where: { id: expenseId },
         data: {
             amount,
-            date
+            date,
+            participants: {
+                deleteMany: {},
+                create: participantIds.map(id => ({ userId: id }))
+            }
         }
     })
 

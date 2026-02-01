@@ -20,7 +20,7 @@ interface ExpenseHistoryProps {
   users: User[]
   expenses: Expense[]
   removeExpense: (id: string) => void
-  updateExpense: (id: string, data: { amount: number, date: string }) => void
+  updateExpense: (id: string, data: { amount: number, date: string, participants: string[] }) => void
   currentUserId: string | null
   isAdmin: boolean
 }
@@ -52,10 +52,14 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
   // Edit State
   const [editAmount, setEditAmount] = useState('')
   const [editDate, setEditDate] = useState('')
+  const [editParticipants, setEditParticipants] = useState<string[]>([])
+  const [isParticipantsOpen, setIsParticipantsOpen] = useState(false)
 
   const startEditing = (expense: Expense) => {
     setEditingId(expense.id)
     setEditAmount(expense.amount.toFixed(2).replace('.', ','))
+    setEditParticipants(expense.participants)
+    setIsParticipantsOpen(false)
     
     // Format date YYYY-MM-DD -> DD/MM/YYYY
     if (expense.date) {
@@ -73,12 +77,19 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
     setEditingId(null)
     setEditAmount('')
     setEditDate('')
+    setEditParticipants([])
+    setIsParticipantsOpen(false)
   }
 
   const saveEditing = (id: string) => {
     const amount = parseFloat(editAmount.replace(/\./g, '').replace(',', '.'))
     if (isNaN(amount) || editDate.length !== 10) {
         alert('Dados inválidos')
+        return
+    }
+
+    if (editParticipants.length === 0) {
+        alert('Selecione pelo menos um participante')
         return
     }
 
@@ -89,8 +100,16 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
     }
     const isoDate = `${year}-${month}-${day}`
     
-    updateExpense(id, { amount, date: isoDate })
+    updateExpense(id, { amount, date: isoDate, participants: editParticipants })
     setEditingId(null)
+  }
+
+  const toggleEditParticipant = (userId: string) => {
+    setEditParticipants(prev =>
+      prev.includes(userId)
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    )
   }
 
   const handleEditDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -137,7 +156,7 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
             return (
                 <li 
                 key={expense.id} 
-                className={`flex justify-between items-start p-3 rounded-lg border transition-all hover:bg-slate-700/50 w-full overflow-hidden ${
+                className={`flex justify-between items-start p-3 rounded-lg border transition-all hover:bg-slate-700/50 w-full ${
                     isMyExpense 
                     ? 'bg-green-900/10 border-green-500/30' 
                     : 'bg-slate-800 border-slate-700'
@@ -201,17 +220,49 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
                              </span>
                         </div>
                         
-                        <div className="text-xs text-slate-500 mt-1 truncate">
-                           Participantes: {expense.participants.map((id, idx) => {
-                               const u = users.find(user => user.id === id);
-                               if (!u) return null;
-                               return (
-                                 <span key={id}>
-                                   {idx > 0 && ', '}
-                                   <span className={getUserColor(id)}>{u.name}</span>
-                                 </span>
-                               )
-                           })}
+                        <div className="text-xs text-slate-500 mt-1 min-h-[24px]">
+                           {isEditing ? (
+                              <div className="w-full">
+                                <button
+                                   type="button"
+                                   onClick={() => setIsParticipantsOpen(!isParticipantsOpen)}
+                                   className="text-[10px] bg-slate-900 border border-slate-600 rounded px-2 py-0.5 flex items-center gap-1 text-green-400 hover:text-green-300 w-fit"
+                                >
+                                   Rachar com: {editParticipants.length} {editParticipants.length === 1 ? 'pessoa' : 'pessoas'}
+                                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`w-3 h-3 transition-transform ${isParticipantsOpen ? 'rotate-180' : ''}`}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                    </svg>
+                                </button>
+                                {isParticipantsOpen && (
+                                     <div className="mt-1 w-full bg-slate-800 border border-slate-600 rounded shadow-inner max-h-40 overflow-y-auto animate-in fade-in zoom-in duration-100">
+                                        {users.map(u => (
+                                           <label key={u.id} className="flex items-center px-3 py-2 hover:bg-slate-700 cursor-pointer border-b border-slate-700/50 last:border-0">
+                                              <input 
+                                                type="checkbox" 
+                                                checked={editParticipants.includes(u.id)}
+                                                onChange={() => toggleEditParticipant(u.id)}
+                                                className="mr-2 accent-green-500"
+                                              />
+                                              <span className={`text-xs font-semibold ${getUserColor(u.id)}`}>{u.name}</span>
+                                           </label>
+                                        ))}
+                                     </div>
+                                )}
+                              </div>
+                           ) : (
+                               <>
+                               Participantes: {expense.participants.map((id, idx) => {
+                                   const u = users.find(user => user.id === id);
+                                   if (!u) return null;
+                                   return (
+                                     <span key={id}>
+                                       {idx > 0 && ', '}
+                                       <span className={getUserColor(id)}>{u.name}</span>
+                                     </span>
+                                   )
+                               })}
+                               </>
+                           )}
                         </div>
                     </div>
                 </div>
