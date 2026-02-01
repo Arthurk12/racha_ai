@@ -66,7 +66,7 @@ export default function Home() {
               </svg>
             </div>
 
-            <h2 className="text-2xl font-bold text-white mb-2">Conta Fechada!</h2>
+            <h2 className="text-2xl font-bold text-white mb-2">Grupo Encerrado!</h2>
             <p className="text-slate-300 mb-8 leading-relaxed">
               Obrigado por usar o <span className="text-green-400 font-semibold">Racha AI</span>. 
               <br/>
