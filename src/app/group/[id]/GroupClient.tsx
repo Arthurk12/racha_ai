@@ -311,7 +311,7 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
         <div className="flex justify-between items-center mb-6">
            <div>
              <h1 className="text-3xl font-bold mb-1 text-green-400 flex items-center gap-2">
-                <img src="/favicon.ico" alt="Logo" className="w-8 h-8 rounded-full" />
+                <img src="/favicon.ico" alt="Logo" className="w-8 h-8 rounded-full shadow-sm" />
                 Racha AI
              </h1>
              <h2 className="text-xl text-slate-400">Grupo: <span className="text-slate-200">{groupName}</span></h2>
