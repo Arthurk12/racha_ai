@@ -5,7 +5,7 @@ import UserList from '@/components/UserList'
 import ExpenseList from '@/components/ExpenseList'
 import ExpenseHistory from '@/components/ExpenseHistory'
 import BalanceSummary from '@/components/BalanceSummary'
-import { addUser, removeUser, addExpense, removeExpense, verifyUser, resetUserPin, updateUserPin, deleteGroup } from '@/app/actions'
+import { addUser, removeUser, addExpense, removeExpense, updateExpense, verifyUser, resetUserPin, updateUserPin, deleteGroup } from '@/app/actions'
 import { useTransition } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
@@ -165,6 +165,21 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
 
   const handleRemoveExpense = (expenseId: string) => {
     startTransition(() => removeExpense(groupId, expenseId))
+  }
+
+  const handleUpdateExpense = (expenseId: string, data: { amount: number, date: string }) => {
+    if (currentUserId) {
+        const formData = new FormData()
+        formData.append('amount', data.amount.toString())
+        formData.append('date', data.date)
+        
+        startTransition(async () => {
+            const result: any = await updateExpense(groupId, expenseId, formData, currentUserId)
+            if (result.error) {
+                alert(result.error)
+            }
+        })
+    }
   }
 
   const handleChangePin = () => {
@@ -385,8 +400,7 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
             <ExpenseHistory 
                 users={users} 
                 expenses={expenses} 
-                removeExpense={handleRemoveExpense} 
-                currentUserId={currentUserId}
+                removeExpense={handleRemoveExpense}               updateExpense={handleUpdateExpense}                currentUserId={currentUserId}
                 isAdmin={isCurrentUserAdmin}
             />
           </div>

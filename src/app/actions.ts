@@ -171,3 +171,43 @@ export async function removeExpense(groupId: string, expenseId: string) {
   })
   revalidatePath(`/group/${groupId}`)
 }
+
+export async function updateExpense(groupId: string, expenseId: string, formData: FormData, requesterId: string) {
+    const amountStr = formData.get('amount') as string
+    const dateStr = formData.get('date') as string
+    
+    // Validate
+    if (!amountStr || !dateStr) return { error: 'Dados inválidos' }
+
+    const amount = parseFloat(amountStr)
+    const date = new Date(dateStr)
+
+    // Check permissions
+    const expense = await prisma.expense.findUnique({
+        where: { id: expenseId },
+        include: { paidBy: true }
+    })
+    
+    if (!expense) return { error: 'Despesa não encontrada' }
+
+    const requester = await prisma.user.findUnique({ where: { id: requesterId } })
+    if (!requester) return { error: 'Usuário não encontrado' }
+
+    const isOwner = expense.paidById === requesterId
+    const isAdmin = requester.isAdmin
+
+    if (!isOwner && !isAdmin) {
+        return { error: 'Permissão negada' }
+    }
+
+    await prisma.expense.update({
+        where: { id: expenseId },
+        data: {
+            amount,
+            date
+        }
+    })
+
+    revalidatePath(`/group/${groupId}`)
+    return { success: true }
+}
