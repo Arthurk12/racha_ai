@@ -63,20 +63,20 @@ export default function ExpenseHistory({ users, expenses, removeExpense, current
             return (
                 <li 
                 key={expense.id} 
-                className={`flex justify-between items-start p-3 rounded-lg border transition-all hover:bg-slate-700/50 ${
+                className={`flex justify-between items-start p-3 rounded-lg border transition-all hover:bg-slate-700/50 w-full overflow-hidden ${
                     isMyExpense 
                     ? 'bg-slate-800 border-green-500/30' 
                     : 'bg-slate-800 border-slate-700'
                 }`}
                 >
-                <div className="flex items-start gap-3 flex-1">
+                <div className="flex items-start gap-3 flex-1 min-w-0">
                     <div className="w-10 h-10 flex items-center justify-center bg-slate-700 rounded-full text-2xl flex-shrink-0 border border-slate-600 shadow-sm mt-1">
                         {categoryIcon}
                     </div>
                     
                     <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start gap-2">
-                            <p className="font-semibold text-slate-100 truncate capitalize flex-1 min-w-0" title={expense.description}>
+                            <p className="font-semibold text-slate-100 truncate capitalize flex-1 min-w-0 mr-1" title={expense.description}>
                                 {expense.description}
                             </p>
                             <span className="text-green-400 font-bold whitespace-nowrap flex-shrink-0">
@@ -84,11 +84,11 @@ export default function ExpenseHistory({ users, expenses, removeExpense, current
                             </span>
                         </div>
                         
-                        <div className="flex items-center gap-2 mt-1 flex-wrap">
-                             <span className="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full border border-slate-600">
+                        <div className="flex items-center gap-2 mt-1 flex-wrap overflow-hidden">
+                             <span className="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full border border-slate-600 truncate max-w-[120px]">
                                 {expense.date ? new Date(expense.date).toLocaleDateString('pt-BR') : 'Data n/a'}
                              </span>
-                             <span className="text-xs text-slate-400">
+                             <span className="text-xs text-slate-400 truncate flex-1 min-w-0">
                                 Pago por <span className="text-slate-200 font-medium">{users.find(u => u.id === expense.paidBy)?.name || 'Desconhecido'}</span>
                              </span>
                         </div>
@@ -102,7 +102,7 @@ export default function ExpenseHistory({ users, expenses, removeExpense, current
                 {canDelete && (
                     <button
                         onClick={() => removeExpense(expense.id)}
-                        className="text-slate-500 hover:text-red-400 p-2 ml-2 transition-colors rounded-full hover:bg-slate-700/80"
+                        className="text-slate-500 hover:text-red-400 p-2 ml-2 transition-colors rounded-full hover:bg-slate-700/80 flex-shrink-0"
                         title="Remover Despesa"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
