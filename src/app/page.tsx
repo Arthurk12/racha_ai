@@ -23,14 +23,20 @@ export default function Home() {
       return
     }
 
-    const result = await createGroup(formData.groupName, formData.adminName, formData.adminPin)
-    
-    if (result) {
-      localStorage.setItem(`racha_ai_user_${result.groupId}`, result.adminId)
-      router.push(`/group/${result.groupId}?created=true`)
-    } else {
+    try {
+      const result = await createGroup(formData.groupName, formData.adminName, formData.adminPin)
+      
+      if (result) {
+        localStorage.setItem(`racha_ai_user_${result.groupId}`, result.adminId)
+        router.push(`/group/${result.groupId}?created=true`)
+      } else {
+        setIsPending(false)
+        alert('Erro ao criar grupo: Retorno vazio do servidor.')
+      }
+    } catch (error) {
+      console.error(error)
       setIsPending(false)
-      alert('Erro ao criar grupo')
+      alert('Erro grave ao criar grupo. Verifique o console ou os logs.')
     }
   }
 

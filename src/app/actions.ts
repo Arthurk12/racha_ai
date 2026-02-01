@@ -6,24 +6,29 @@ import { revalidatePath } from 'next/cache'
 export async function createGroup(groupName: string, adminName: string, adminPin: string) {
   if (!groupName || !adminName || !adminPin) return null
 
-  const group = await prisma.group.create({
-    data: { 
-      name: groupName,
-      users: {
-        create: {
-          name: adminName,
-          pin: adminPin,
-          isAdmin: true
+  try {
+    const group = await prisma.group.create({
+      data: { 
+        name: groupName,
+        users: {
+          create: {
+            name: adminName,
+            pin: adminPin,
+            isAdmin: true
+          }
         }
+      },
+      include: {
+        users: true
       }
-    },
-    include: {
-      users: true
-    }
-  })
+    })
 
-  const adminUser = group.users[0]
-  return { groupId: group.id, adminId: adminUser.id }
+    const adminUser = group.users[0]
+    return { groupId: group.id, adminId: adminUser.id }
+  } catch (error) {
+    console.error('Erro detalhado ao criar grupo:', error)
+    throw error // Re-throw para ser tratado pelo Next.js ou capturado no client
+  }
 }
 
 export async function addUser(groupId: string, formData: FormData) {
