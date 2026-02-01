@@ -87,7 +87,10 @@ export default function Home() {
       )}
 
       <div className="max-w-md w-full bg-slate-800 rounded-lg shadow-xl p-8 border border-slate-700">
-        <h1 className="text-3xl font-bold text-center mb-6 text-green-400">Racha AI</h1>
+        <h1 className="text-3xl font-bold text-center mb-6 text-green-400 flex items-center justify-center gap-2">
+            <img src="/icon" alt="Logo" className="w-8 h-8 rounded-full shadow-sm" />
+            Racha AI
+        </h1>
         <p className="text-center text-slate-300 mb-8">
           Divida despesas com amigos de forma simples e sem login.
         </p>
