@@ -8,6 +8,7 @@ import BalanceSummary from '@/components/BalanceSummary'
 import { addUser, removeUser, addExpense, removeExpense, updateExpense, verifyUser, resetUserPin, updateUserPin, deleteGroup } from '@/app/actions'
 import { useTransition } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Image from 'next/image'
 
 interface User {
   id: string
@@ -212,7 +213,7 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
         <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
              <div className="bg-slate-800 p-8 rounded-lg shadow-2xl max-w-md w-full border border-slate-700">
             <h1 className="text-3xl font-bold mb-2 text-center text-green-400 flex items-center justify-center gap-2">
-                <img src="/icon" alt="Logo" className="w-8 h-8 rounded-full shadow-sm" />
+                <Image src="/icon" alt="Logo" width={32} height={32} className="rounded-full shadow-sm" />
                 Racha AI
             </h1>
             <p className="text-center text-slate-400 mb-6">Você foi convidado para o grupo <span className="text-slate-200 font-semibold">{groupName}</span></p>
@@ -312,7 +313,7 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
         <div className="flex justify-between items-center mb-6">
            <div>
              <h1 className="text-3xl font-bold mb-1 text-green-400 flex items-center gap-2">
-                <img src="/icon" alt="Logo" className="w-8 h-8 rounded-full shadow-sm" />
+                <Image src="/icon" alt="Logo" width={32} height={32} className="rounded-full shadow-sm" />
                 Racha AI
              </h1>
              <h2 className="text-xl text-slate-400">Grupo: <span className="text-slate-200">{groupName}</span></h2>
