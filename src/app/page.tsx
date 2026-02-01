@@ -104,7 +104,7 @@ export default function Home() {
               onChange={(e) => setFormData({...formData, groupName: e.target.value})}
               placeholder="Ex: Churrasco de Domingo"
               required
-              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-white placeholder-slate-400"
+              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-white placeholder-slate-400 font-sans"
             />
           </div>
 
@@ -122,7 +122,7 @@ export default function Home() {
                   onChange={(e) => setFormData({...formData, adminName: e.target.value})}
                   placeholder="Ex: João Silva"
                   required
-                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-white placeholder-slate-400"
+                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-white placeholder-slate-400 font-sans"
                 />
               </div>
               <div>

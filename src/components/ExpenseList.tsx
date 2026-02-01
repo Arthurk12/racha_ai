@@ -212,7 +212,7 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
                       <select
                           value={paidBy}
                           onChange={(e) => setPaidBy(e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-white"
+                          className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-white font-sans"
                       >
                           <option value="">Quem pagou?</option>
                           {users.map(user => (

@@ -37,6 +37,8 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
   const justCreated = searchParams.get('created') === 'true'
   
   let [isPending, startTransition] = useTransition()
+  let [isAddingExpense, startAddingExpense] = useTransition()
+
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [showAuthModal, setShowAuthModal] = useState(false)
   
@@ -160,7 +162,7 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
     formData.append('date', expense.date)
     expense.participants.forEach(p => formData.append('participants', p))
     
-    startTransition(() => addExpense(groupId, formData))
+    startAddingExpense(() => addExpense(groupId, formData))
   }
 
   const handleRemoveExpense = (expenseId: string) => {
@@ -208,7 +210,10 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
       return (
         <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
              <div className="bg-slate-800 p-8 rounded-lg shadow-2xl max-w-md w-full border border-slate-700">
-            <h1 className="text-3xl font-bold mb-2 text-center text-green-400">Racha AI</h1>
+            <h1 className="text-3xl font-bold mb-2 text-center text-green-400 flex items-center justify-center gap-2">
+                <img src="/favicon.ico" alt="Logo" className="w-8 h-8 rounded-full" />
+                Racha AI
+            </h1>
             <p className="text-center text-slate-400 mb-6">Você foi convidado para o grupo <span className="text-slate-200 font-semibold">{groupName}</span></p>
             
             <h2 className="text-xl font-bold mb-4 text-center text-white">Quem é você?</h2>
@@ -224,7 +229,7 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
                     setAuthPin('')
                     setAuthError('')
                   }}
-                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded mb-2 text-white outline-none focus:ring-2 focus:ring-green-400"
+                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded mb-2 text-white outline-none focus:ring-2 focus:ring-green-400 font-sans"
                 >
                   <option value="">Selecione seu nome...</option>
                   {users.map(u => (
@@ -305,7 +310,10 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6">
            <div>
-             <h1 className="text-3xl font-bold mb-1 text-green-400">Racha AI</h1>
+             <h1 className="text-3xl font-bold mb-1 text-green-400 flex items-center gap-2">
+                <img src="/favicon.ico" alt="Logo" className="w-8 h-8 rounded-full" />
+                Racha AI
+             </h1>
              <h2 className="text-xl text-slate-400">Grupo: <span className="text-slate-200">{groupName}</span></h2>
            </div>
            {currentUserId && (
@@ -391,7 +399,7 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
               addExpense={handleAddExpense} 
               removeExpense={handleRemoveExpense} 
               currentUserId={currentUserId}
-              isPending={isPending}
+              isPending={isAddingExpense}
               isAdmin={isCurrentUserAdmin}
             />
           </div>
