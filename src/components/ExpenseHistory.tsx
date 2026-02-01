@@ -42,6 +42,37 @@ const getCategoryIcon = (description: string) => {
   return '📝'
 }
 
+const USER_COLORS = [
+  'text-cyan-300',
+  'text-pink-300',
+  'text-emerald-300',
+  'text-violet-300',
+  'text-amber-300',
+  'text-rose-300',
+  'text-sky-300',
+  'text-lime-300',
+  'text-fuchsia-300',
+  'text-teal-300',
+  'text-red-300',
+  'text-orange-300',
+  'text-yellow-300',
+  'text-green-300',
+  'text-blue-300',
+  'text-indigo-300',
+  'text-purple-300',
+  'text-red-400',
+  'text-cyan-400',
+  'text-fuchsia-400'
+]
+
+const getUserColor = (userId: string) => {
+  let hash = 0
+  for (let i = 0; i < userId.length; i++) {
+    hash = userId.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  return USER_COLORS[Math.abs(hash) % USER_COLORS.length]
+}
+
 export default function ExpenseHistory({ users, expenses, removeExpense, currentUserId, isAdmin }: ExpenseHistoryProps) {
   const [isExpanded, setIsExpanded] = useState(false)
 
@@ -64,13 +95,14 @@ export default function ExpenseHistory({ users, expenses, removeExpense, current
             const isMyExpense = currentUserId === expense.paidBy;
             const canDelete = isAdmin || isMyExpense;
             const categoryIcon = getCategoryIcon(expense.description);
+            const userColor = getUserColor(expense.paidBy);
 
             return (
                 <li 
                 key={expense.id} 
                 className={`flex justify-between items-start p-3 rounded-lg border transition-all hover:bg-slate-700/50 w-full overflow-hidden ${
                     isMyExpense 
-                    ? 'bg-slate-800 border-green-500/30' 
+                    ? 'bg-green-900/10 border-green-500/30' 
                     : 'bg-slate-800 border-slate-700'
                 }`}
                 >
@@ -94,7 +126,7 @@ export default function ExpenseHistory({ users, expenses, removeExpense, current
                                 {expense.date ? new Date(expense.date).toLocaleDateString('pt-BR') : 'Data n/a'}
                              </span>
                              <span className="text-xs text-slate-400 truncate flex-1 min-w-0">
-                                Pago por <span className="text-slate-200 font-medium">{users.find(u => u.id === expense.paidBy)?.name || 'Desconhecido'}</span>
+                                Pago por <span className={`font-bold ${userColor}`}>{users.find(u => u.id === expense.paidBy)?.name || 'Desconhecido'}</span>
                              </span>
                         </div>
                         
