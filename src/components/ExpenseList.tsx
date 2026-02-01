@@ -185,10 +185,12 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
                       onClick={() => {
                           try {
                             const input = dateInputRef.current
-                            if (input && 'showPicker' in input) {
+                            if (!input) return
+                            
+                            if (typeof (input as any).showPicker === 'function') {
                                 (input as any).showPicker()
                             } else {
-                                input?.click() // Fallback
+                                input.click()
                             }
                           } catch (e) {
                               console.error(e)
