@@ -169,9 +169,10 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
     startTransition(() => removeExpense(groupId, expenseId))
   }
 
-  const handleUpdateExpense = (expenseId: string, data: { amount: number, date: string, participants: string[] }) => {
+  const handleUpdateExpense = (expenseId: string, data: { description: string, amount: number, date: string, participants: string[] }) => {
     if (currentUserId) {
         const formData = new FormData()
+        formData.append('description', data.description)
         formData.append('amount', data.amount.toString())
         formData.append('date', data.date)
         data.participants.forEach(p => formData.append('participants', p))

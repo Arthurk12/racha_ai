@@ -20,7 +20,7 @@ interface ExpenseHistoryProps {
   users: User[]
   expenses: Expense[]
   removeExpense: (id: string) => void
-  updateExpense: (id: string, data: { amount: number, date: string, participants: string[] }) => void
+  updateExpense: (id: string, data: { description: string, amount: number, date: string, participants: string[] }) => void
   currentUserId: string | null
   isAdmin: boolean
 }
@@ -50,6 +50,7 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
   const [editingId, setEditingId] = useState<string | null>(null)
   
   // Edit State
+  const [editDescription, setEditDescription] = useState('')
   const [editAmount, setEditAmount] = useState('')
   const [editDate, setEditDate] = useState('')
   const [editParticipants, setEditParticipants] = useState<string[]>([])
@@ -57,6 +58,7 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
 
   const startEditing = (expense: Expense) => {
     setEditingId(expense.id)
+    setEditDescription(expense.description)
     setEditAmount(expense.amount.toFixed(2).replace('.', ','))
     setEditParticipants(expense.participants)
     setIsParticipantsOpen(false)
@@ -75,6 +77,7 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
 
   const cancelEditing = () => {
     setEditingId(null)
+    setEditDescription('')
     setEditAmount('')
     setEditDate('')
     setEditParticipants([])
@@ -83,7 +86,7 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
 
   const saveEditing = (id: string) => {
     const amount = parseFloat(editAmount.replace(/\./g, '').replace(',', '.'))
-    if (isNaN(amount) || editDate.length !== 10) {
+    if (isNaN(amount) || editDate.length !== 10 || !editDescription.trim()) {
         alert('Dados inválidos')
         return
     }
@@ -100,7 +103,7 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
     }
     const isoDate = `${year}-${month}-${day}`
     
-    updateExpense(id, { amount, date: isoDate, participants: editParticipants })
+    updateExpense(id, { description: editDescription.trim(), amount, date: isoDate, participants: editParticipants })
     setEditingId(null)
   }
 
@@ -169,16 +172,26 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
                     
                     <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start gap-2">
-                            <p className="font-semibold text-slate-100 truncate capitalize flex-1 min-w-0 mr-1" title={expense.description}>
-                                {expense.description}
-                            </p>
+                            {isEditing ? (
+                                <input 
+                                    type="text"
+                                    value={editDescription}
+                                    onChange={(e) => setEditDescription(e.target.value)}
+                                    className="flex-1 min-w-0 px-2 py-1 text-sm bg-slate-900 border border-slate-600 rounded text-white focus:ring-1 focus:ring-green-400 outline-none mr-2"
+                                    autoFocus
+                                    placeholder="Descrição"
+                                />
+                            ) : (
+                                <p className="font-semibold text-slate-100 truncate capitalize flex-1 min-w-0 mr-1" title={expense.description}>
+                                    {expense.description}
+                                </p>
+                            )}
                             {isEditing ? (
                                 <input 
                                     type="text"
                                     value={editAmount}
                                     onChange={(e) => setEditAmount(e.target.value.replace(/[^0-9,]/g, ''))}
                                     className="w-24 px-2 py-1 text-sm bg-slate-900 border border-slate-600 rounded text-white focus:ring-1 focus:ring-green-400 outline-none text-right"
-                                    autoFocus
                                 />
                             ) : (
                                 <span className="text-green-400 font-bold whitespace-nowrap flex-shrink-0">
@@ -220,9 +233,9 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
                              </span>
                         </div>
                         
-                        <div className="text-xs text-slate-500 mt-1 min-h-[24px]">
+                                <div className="text-xs text-slate-500 mt-1 min-h-[24px]">
                            {isEditing ? (
-                              <div className="w-full">
+                              <div className="w-full mt-2">
                                 <button
                                    type="button"
                                    onClick={() => setIsParticipantsOpen(!isParticipantsOpen)}
