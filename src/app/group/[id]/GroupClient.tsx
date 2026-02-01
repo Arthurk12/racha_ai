@@ -374,6 +374,7 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
               addExpense={handleAddExpense} 
               removeExpense={handleRemoveExpense} 
               currentUserId={currentUserId}
+              isPending={isPending}
             />
           </div>
           <div className="flex flex-col gap-6">

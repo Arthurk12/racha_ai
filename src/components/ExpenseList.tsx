@@ -22,9 +22,10 @@ interface ExpenseListProps {
   addExpense: (expense: Omit<Expense, 'id'>) => void
   removeExpense: (id: string) => void
   currentUserId: string | null
+  isPending?: boolean
 }
 
-export default function ExpenseList({ users, expenses, addExpense, removeExpense, currentUserId }: ExpenseListProps) {
+export default function ExpenseList({ users, expenses, addExpense, removeExpense, currentUserId, isPending }: ExpenseListProps) {
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
   const [paidBy, setPaidBy] = useState('')
@@ -38,11 +39,7 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
 
   // Initialize date
   useEffect(() => {
-    const today = new Date()
-    const dd = String(today.getDate()).padStart(2, '0')
-    const mm = String(today.getMonth() + 1).padStart(2, '0')
-    const yyyy = today.getFullYear()
-    setDate(`${dd}/${mm}/${yyyy}`)
+    setDate(new Date().toISOString().split('T')[0])
   }, [])
 
   // Set default payer to current user
@@ -52,35 +49,20 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
     }
   }, [currentUserId])
   
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let v = e.target.value.replace(/\D/g, '')
-    if (v.length > 8) v = v.slice(0, 8)
-    
-    if (v.length > 4) {
-        v = `${v.slice(0, 2)}/${v.slice(2, 4)}/${v.slice(4)}`
-    } else if (v.length > 2) {
-        v = `${v.slice(0, 2)}/${v.slice(2)}`
-    }
-    setDate(v)
-  }
+  // Removed handleDateChange since we are using native date picker
 
   const handleAddExpense = () => {
-    if (description.trim() && amount && paidBy && participants.length > 0 && date.length === 10) {
+    if (description.trim() && amount && paidBy && participants.length > 0 && date) {
       const parsedAmount = parseFloat(amount.replace(',', '.'))
       if (isNaN(parsedAmount)) return
       
-      const [day, month, year] = date.split('/')
-      // Basic validation
-      if (!day || !month || !year) return
-
-      // Create format for backend (YYYY-MM-DD)
-      const isoDate = `${year}-${month}-${day}`
-
+      // date is already YYYY-MM-DD from input type="date"
+      
       addExpense({
         description: description.trim(),
         amount: parsedAmount,
         paidBy,
-        date: isoDate,
+        date,
         participants
       })
       
@@ -88,16 +70,10 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
       setDescription('')
       setAmount('')
       // Reset date to today
-      const today = new Date()
-      const dd = String(today.getDate()).padStart(2, '0')
-      const mm = String(today.getMonth() + 1).padStart(2, '0')
-      const yyyy = today.getFullYear()
-      setDate(`${dd}/${mm}/${yyyy}`)
+      setDate(new Date().toISOString().split('T')[0])
       
       setPaidBy(currentUserId || '') 
       setParticipants(users.map(u => u.id))
-    } else if (date.length !== 10) {
-        alert('Data inválida. Use o formato DD/MM/AAAA')
     }
   }
 
@@ -131,12 +107,9 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
           className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-white placeholder-slate-400"
         />
         <input
-          type="text"
-          inputMode="numeric"
-          maxLength={10}
-          placeholder="DD/MM/AAAA"
+          type="date"
           value={date}
-          onChange={handleDateChange}
+          onChange={(e) => setDate(e.target.value)}
           className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-white placeholder-slate-400"
         />
         <select
@@ -167,9 +140,18 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
         </div>
         <button
           onClick={handleAddExpense}
-          className="w-full px-4 py-2 bg-green-500 text-slate-900 rounded-md hover:bg-green-400 focus:outline-none focus:ring-2 focus:ring-green-400 font-bold shadow"
+          disabled={isPending}
+          className={`w-full px-4 py-2 bg-green-500 text-slate-900 rounded-md hover:bg-green-400 focus:outline-none focus:ring-2 focus:ring-green-400 font-bold shadow flex items-center justify-center ${isPending ? 'opacity-75 cursor-not-allowed' : ''}`}
         >
-          Adicionar Despesa
+          {isPending ? (
+            <>
+              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-slate-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Adicionando...
+            </>
+          ) : 'Adicionar Despesa'}
         </button>
       </div>
     </div>
