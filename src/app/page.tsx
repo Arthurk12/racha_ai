@@ -1,11 +1,22 @@
 'use client'
 
 import { createGroup } from './actions'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function Home() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const [showExitModal, setShowExitModal] = useState(false)
+
+  useEffect(() => {
+    if (searchParams.get('groupClosed') === 'true') {
+        setShowExitModal(true)
+        // Clean URL without refresh
+        router.replace('/')
+    }
+  }, [searchParams, router])
+
   const [formData, setFormData] = useState({
     groupName: '',
     adminName: '',
@@ -42,6 +53,39 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
+      {/* Success Modal for Group Closure */}
+      {showExitModal && (
+        <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-slate-800 border border-green-500/30 rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center relative overflow-hidden">
+            {/* Background decoration */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 to-emerald-600"></div>
+            
+            <div className="mb-6 inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-500/10 text-green-400 mx-auto">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+              </svg>
+            </div>
+
+            <h2 className="text-2xl font-bold text-white mb-2">Conta Fechada!</h2>
+            <p className="text-slate-300 mb-8 leading-relaxed">
+              Obrigado por usar o <span className="text-green-400 font-semibold">Racha AI</span>. 
+              <br/>
+              Esperamos ter ajudado a organizar suas despesas!
+            </p>
+
+            <button
+              onClick={() => setShowExitModal(false)}
+              className="w-full py-3 px-6 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+            >
+              Começar Novo Grupo
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-md w-full bg-slate-800 rounded-lg shadow-xl p-8 border border-slate-700">
         <h1 className="text-3xl font-bold text-center mb-6 text-green-400">Racha AI</h1>
         <p className="text-center text-slate-300 mb-8">

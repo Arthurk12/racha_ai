@@ -395,8 +395,7 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
                        startTransition(async () => {
                          const res = await deleteGroup(groupId, currentUserId)
                          if (res && res.success) {
-                           alert('Grupo encerrado com sucesso.')
-                           router.push('/')
+                           router.push('/?groupClosed=true')
                          } else {
                            alert('Erro ao excluir grupo.')
                          }
