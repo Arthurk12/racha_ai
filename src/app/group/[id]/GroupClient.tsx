@@ -365,6 +365,7 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
               addUser={handleAddUser} 
               removeUser={handleRemoveUser} 
               isAdmin={isCurrentUserAdmin}
+              currentUserId={currentUserId}
               onResetPin={handleResetPin}
             />
             {isPending && <p className="text-sm text-green-400 mb-2 animate-pulse">Atualizando...</p>}
@@ -375,6 +376,7 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
               removeExpense={handleRemoveExpense} 
               currentUserId={currentUserId}
               isPending={isPending}
+              isAdmin={isCurrentUserAdmin}
             />
           </div>
           <div className="flex flex-col gap-6">
@@ -385,6 +387,7 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
                 expenses={expenses} 
                 removeExpense={handleRemoveExpense} 
                 currentUserId={currentUserId}
+                isAdmin={isCurrentUserAdmin}
             />
           </div>
         </div>

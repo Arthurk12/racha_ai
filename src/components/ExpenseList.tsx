@@ -23,9 +23,10 @@ interface ExpenseListProps {
   removeExpense: (id: string) => void
   currentUserId: string | null
   isPending?: boolean
+  isAdmin: boolean
 }
 
-export default function ExpenseList({ users, expenses, addExpense, removeExpense, currentUserId, isPending }: ExpenseListProps) {
+export default function ExpenseList({ users, expenses, addExpense, removeExpense, currentUserId, isPending, isAdmin }: ExpenseListProps) {
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
   const [paidBy, setPaidBy] = useState('')
@@ -161,16 +162,20 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
                 </div>
             </div>
         </div>
-        <select
-          value={paidBy}
-          onChange={(e) => setPaidBy(e.target.value)}
-          className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-white"
-        >
-          <option value="">Quem pagou?</option>
-          {users.map(user => (
-            <option key={user.id} value={user.id}>{user.name}</option>
-          ))}
-        </select>
+        <div className="relative">
+            {/* If admin, show full select. If not, show read-only or disabled select enforcing current user */}
+            <select
+                value={paidBy}
+                onChange={(e) => setPaidBy(e.target.value)}
+                disabled={!isAdmin}
+                className={`w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-white ${!isAdmin ? 'opacity-75 cursor-not-allowed' : ''}`}
+            >
+                <option value="">Quem pagou?</option>
+                {users.map(user => (
+                    <option key={user.id} value={user.id}>{user.name}</option>
+                ))}
+            </select>
+        </div>
         <div>
           <p className="mb-2 text-slate-300">Participantes:</p>
           <div className="flex flex-wrap gap-2">

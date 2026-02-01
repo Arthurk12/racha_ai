@@ -14,9 +14,10 @@ interface UserListProps {
   removeUser: (id: string) => void
   isAdmin: boolean
   onResetPin: (id: string) => void
+  currentUserId: string | null
 }
 
-export default function UserList({ users, addUser, removeUser, isAdmin, onResetPin }: UserListProps) {
+export default function UserList({ users, addUser, removeUser, isAdmin, onResetPin, currentUserId }: UserListProps) {
   const [newUserName, setNewUserName] = useState('')
 
   const handleAddUser = () => {
@@ -55,15 +56,16 @@ export default function UserList({ users, addUser, removeUser, isAdmin, onResetP
                 </button>
                )}
                
-               {/* Show remove button if I am admin OR if it is myself (handled by parent logic mostly, but UI can show) */}
-               {isAdmin || true ? ( // Logic handled in action, here just showing button that might fail if unauthorized
+               {/* Show remove button if I am admin OR if it is myself */}
+               {(isAdmin || (currentUserId && user.id === currentUserId)) && (
                 <button
                   onClick={() => removeUser(user.id)}
                   className="text-red-400 hover:text-red-300 focus:outline-none text-sm"
+                  title={user.id === currentUserId ? "Sair do grupo" : "Remover usuário"}
                 >
                   ✕
                 </button>
-               ) : null}
+               )}
             </div>
           </li>
         ))}
