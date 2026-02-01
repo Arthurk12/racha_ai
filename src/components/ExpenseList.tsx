@@ -184,10 +184,11 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
                       className="relative w-6 h-6 cursor-pointer hover:text-green-400 transition-colors"
                       onClick={() => {
                           try {
-                            if (dateInputRef.current && 'showPicker' in dateInputRef.current) {
-                                (dateInputRef.current as any).showPicker()
+                            const input = dateInputRef.current
+                            if (input && 'showPicker' in input) {
+                                (input as any).showPicker()
                             } else {
-                                dateInputRef.current?.click() // Fallback
+                                input?.click() // Fallback
                             }
                           } catch (e) {
                               console.error(e)
