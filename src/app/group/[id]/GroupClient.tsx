@@ -7,7 +7,7 @@ import ExpenseHistory from '@/components/ExpenseHistory'
 import BalanceSummary from '@/components/BalanceSummary'
 import { addUser, removeUser, addExpense, removeExpense, updateExpense, verifyUser, resetUserPin, updateUserPin, deleteGroup } from '@/app/actions'
 import { useTransition } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import Image from 'next/image'
 
 interface User {
@@ -35,6 +35,7 @@ interface GroupClientProps {
 export default function GroupClient({ groupId, groupName, users, expenses }: GroupClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const pathname = usePathname()
   const justCreated = searchParams.get('created') === 'true'
   
   let [isPending, startTransition] = useTransition()
@@ -371,7 +372,12 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
                 if (inviteLink) {
                     navigator.clipboard.writeText(inviteLink.split('?')[0])
                     setLinkCopied(true)
-                    setTimeout(() => setLinkCopied(false), 2000)
+                    setTimeout(() => {
+                        setLinkCopied(false)
+                        const params = new URLSearchParams(searchParams.toString())
+                        params.delete('created')
+                        router.replace(params.toString() ? `${pathname}?${params.toString()}` : pathname)
+                    }, 3000)
                 }
                 }}
                 className={`whitespace-nowrap font-medium px-4 h-10 rounded transition-all shadow-md active:scale-95 transform flex items-center justify-center min-w-[120px] ${
