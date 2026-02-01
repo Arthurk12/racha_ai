@@ -147,7 +147,8 @@ export async function addExpense(groupId: string, formData: FormData) {
   // Simple approach: new Date(dateStr) typically creates UTC midnight.
   // Better approach for display: keep the string or just use the date.
   // For sorting: Date object is fine.
-  const date = dateStr ? new Date(dateStr) : new Date()
+  // FIX: Appending T12:00:00Z to ensure it is treated as Noon UTC, avoiding timezone shifts to previous day in Western Hemisphere
+  const date = dateStr ? new Date(`${dateStr}T12:00:00Z`) : new Date()
 
   await prisma.expense.create({
     data: {
@@ -181,7 +182,8 @@ export async function updateExpense(groupId: string, expenseId: string, formData
     if (!amountStr || !dateStr || participantIds.length === 0) return { error: 'Dados inválidos' }
 
     const amount = parseFloat(amountStr)
-    const date = new Date(dateStr)
+    // FIX: Use noon UTC to prevent date shifting
+    const date = new Date(`${dateStr}T12:00:00Z`)
 
     // Check permissions
     const expense = await prisma.expense.findUnique({
