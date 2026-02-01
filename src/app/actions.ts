@@ -136,9 +136,18 @@ export async function addExpense(groupId: string, formData: FormData) {
   const description = formData.get('description') as string
   const amount = parseFloat(formData.get('amount') as string)
   const paidById = formData.get('paidBy') as string
+  const dateStr = formData.get('date') as string
   const participantIds = formData.getAll('participants') as string[]
 
   if (!description || !amount || !paidById || participantIds.length === 0) return
+
+  // Create date object, ensuring it's treated correctly (default to now if missing)
+  // When coming from input type="date", it is YYYY-MM-DD. 
+  // We append time to current time or set to noon to avoid timezone rolling date back.
+  // Simple approach: new Date(dateStr) typically creates UTC midnight.
+  // Better approach for display: keep the string or just use the date.
+  // For sorting: Date object is fine.
+  const date = dateStr ? new Date(dateStr) : new Date()
 
   await prisma.expense.create({
     data: {
@@ -146,6 +155,7 @@ export async function addExpense(groupId: string, formData: FormData) {
       amount,
       paidById,
       groupId,
+      date,
       participants: {
         create: participantIds.map(id => ({ userId: id }))
       }

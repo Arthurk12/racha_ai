@@ -12,6 +12,7 @@ interface Expense {
   description: string
   amount: number
   paidBy: string
+  date: string
   participants: string[]
 }
 
@@ -52,7 +53,12 @@ export default function ExpenseHistory({ users, expenses, removeExpense, current
                 }`}
                 >
                 <div className="flex-1">
-                    <p className="font-semibold text-slate-100">{expense.description}</p>
+                    <p className="font-semibold text-slate-100">
+                        {expense.description}
+                        <span className="text-xs font-normal text-slate-400 mx-2 opacity-75">
+                         {expense.date ? new Date(expense.date).toLocaleDateString('pt-BR') : ''}
+                        </span>
+                    </p>
                     <p className="text-sm text-slate-400">
                     {expense.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} {isMyExpense ? '- Pago por mim' : `- Pago por ${users.find(u => u.id === expense.paidBy)?.name}`}
                     </p>

@@ -12,6 +12,7 @@ interface Expense {
   description: string
   amount: number
   paidBy: string
+  date: string
   participants: string[]
 }
 
@@ -27,12 +28,18 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
   const [paidBy, setPaidBy] = useState('')
+  const [date, setDate] = useState('')
   const [participants, setParticipants] = useState<string[]>([])
 
   // Set default participants to all users when the list changes
   useEffect(() => {
     setParticipants(users.map(u => u.id))
   }, [users])
+
+  // Initialize date
+  useEffect(() => {
+    setDate(new Date().toISOString().split('T')[0])
+  }, [])
 
   // Set default payer to current user
   useEffect(() => {
@@ -42,7 +49,7 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
   }, [currentUserId])
 
   const handleAddExpense = () => {
-    if (description.trim() && amount && paidBy && participants.length > 0) {
+    if (description.trim() && amount && paidBy && participants.length > 0 && date) {
       const parsedAmount = parseFloat(amount.replace(',', '.'))
       if (isNaN(parsedAmount)) return
       
@@ -50,10 +57,12 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
         description: description.trim(),
         amount: parsedAmount,
         paidBy,
+        date,
         participants
       })
       setDescription('')
       setAmount('')
+      setDate(new Date().toISOString().split('T')[0])
       setPaidBy(currentUserId || '') // Reset to current user
       setParticipants(users.map(u => u.id)) // Reset to all users
     }
@@ -86,6 +95,12 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
             setAmount(value)
           }}
           placeholder="Valor (R$)"
+          className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-white placeholder-slate-400"
+        />
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
           className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-white placeholder-slate-400"
         />
         <select

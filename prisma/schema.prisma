@@ -38,6 +38,7 @@ model Expense {
   groupId      String
   participants ExpenseParticipant[]
   createdAt    DateTime             @default(now())
+  date         DateTime             @default(now())
 }
 
 model ExpenseParticipant {

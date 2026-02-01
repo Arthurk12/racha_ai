@@ -20,6 +20,7 @@ interface Expense {
   description: string
   amount: number
   paidBy: string
+  date: string
   participants: string[]
 }
 
@@ -156,6 +157,7 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
     formData.append('description', expense.description)
     formData.append('amount', expense.amount.toString())
     formData.append('paidBy', expense.paidBy)
+    formData.append('date', expense.date)
     expense.participants.forEach(p => formData.append('participants', p))
     
     startTransition(() => addExpense(groupId, formData))

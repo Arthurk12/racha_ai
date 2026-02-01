@@ -8,6 +8,10 @@ export default async function GroupPage({ params }: { params: { id: string } }) 
     include: {
       users: true,
       expenses: {
+        orderBy: [
+          { date: 'desc' },
+          { createdAt: 'desc' }
+        ],
         include: {
           participants: true
         }
@@ -25,6 +29,7 @@ export default async function GroupPage({ params }: { params: { id: string } }) 
     description: exp.description,
     amount: exp.amount,
     paidBy: exp.paidById,
+    date: exp.date ? exp.date.toISOString() : new Date().toISOString(),
     participants: exp.participants.map((p: any) => p.userId)
   }))
   
