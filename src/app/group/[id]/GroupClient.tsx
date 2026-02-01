@@ -385,16 +385,17 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div>
-            <UserList 
-              users={users} 
-              addUser={handleAddUser} 
-              removeUser={handleRemoveUser} 
-              isAdmin={isCurrentUserAdmin}
-              currentUserId={currentUserId}
-              onResetPin={handleResetPin}
+          <div className="flex flex-col gap-6">
+            <BalanceSummary users={users} expenses={expenses} />
+            
+            <ExpenseHistory 
+                users={users} 
+                expenses={expenses} 
+                removeExpense={handleRemoveExpense}               updateExpense={handleUpdateExpense}                currentUserId={currentUserId}
+                isAdmin={isCurrentUserAdmin}
             />
-            {isPending && <p className="text-sm text-green-400 mb-2 animate-pulse">Atualizando...</p>}
+          </div>
+          <div className="flex flex-col gap-6">
             <ExpenseList 
               users={users} 
               expenses={expenses} 
@@ -404,15 +405,14 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
               isPending={isAddingExpense}
               isAdmin={isCurrentUserAdmin}
             />
-          </div>
-          <div className="flex flex-col gap-6">
-            <BalanceSummary users={users} expenses={expenses} />
-            
-            <ExpenseHistory 
-                users={users} 
-                expenses={expenses} 
-                removeExpense={handleRemoveExpense}               updateExpense={handleUpdateExpense}                currentUserId={currentUserId}
-                isAdmin={isCurrentUserAdmin}
+            {isPending && <p className="text-sm text-green-400 mb-2 animate-pulse">Atualizando...</p>}
+            <UserList 
+              users={users} 
+              addUser={handleAddUser} 
+              removeUser={handleRemoveUser} 
+              isAdmin={isCurrentUserAdmin}
+              currentUserId={currentUserId}
+              onResetPin={handleResetPin}
             />
           </div>
         </div>

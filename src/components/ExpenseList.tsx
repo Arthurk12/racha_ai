@@ -35,7 +35,9 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
   const [participants, setParticipants] = useState<string[]>([])
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false)
   const [showOptions, setShowOptions] = useState(false)
+  const [isDirectPayment, setIsDirectPayment] = useState(false)
   const participantsRef = useRef<HTMLDivElement>(null)
+  const dateInputRef = useRef<HTMLInputElement>(null)
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -122,6 +124,7 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
       
       setPaidBy(currentUserId || '') 
       setParticipants(users.map(u => u.id))
+      setIsDirectPayment(false) // Reset direct payment mode
     } else if (date.length !== 10) {
         alert('Data inválida. Use o formato DD/MM/AAAA')
     }
@@ -177,13 +180,28 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
               className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-white placeholder-slate-500"
               />
               <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                  <div className="relative w-6 h-6">
+                  <div 
+                      className="relative w-6 h-6 cursor-pointer hover:text-green-400 transition-colors"
+                      onClick={() => {
+                          try {
+                            if (dateInputRef.current && 'showPicker' in dateInputRef.current) {
+                                (dateInputRef.current as any).showPicker()
+                            } else {
+                                dateInputRef.current?.click() // Fallback
+                            }
+                          } catch (e) {
+                              console.error(e)
+                          }
+                      }}
+                  >
                       <input 
+                          ref={dateInputRef}
                           type="date" 
                           onChange={handlePickerChange}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                          className="absolute inset-0 w-full h-full opacity-0 pointer-events-none"
+                          tabIndex={-1}
                       />
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-slate-400 pointer-events-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-inherit pointer-events-none">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
                       </svg>
                   </div>
@@ -222,40 +240,78 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
                   </div>
               </div>
             )}
+
+            <div className="flex items-center gap-2 py-1">
+                <input
+                    type="checkbox"
+                    id="isDirectPayment"
+                    checked={isDirectPayment}
+                    onChange={(e) => {
+                        setIsDirectPayment(e.target.checked)
+                        if (e.target.checked) {
+                            setParticipants([]) // Clear to force selection
+                        } else {
+                            setParticipants(users.map(u => u.id)) // Reset to all
+                        }
+                    }}
+                    className="w-4 h-4 accent-green-500 rounded border-slate-500 bg-slate-700 text-green-500 focus:ring-green-500 focus:ring-offset-slate-800"
+                />
+                <label htmlFor="isDirectPayment" className="text-sm font-medium text-slate-300 cursor-pointer select-none">
+                    Pagamento individual (Não dividir a conta)
+                </label>
+            </div>
             
             <div className="relative" ref={participantsRef}>
-               <label className="block text-sm font-medium text-slate-400 mb-1">Rachar com</label>
-              <button
-                type="button"
-                onClick={() => setIsParticipantsOpen(!isParticipantsOpen)}
-                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-left text-white flex justify-between items-center"
-              >
-                <span className={participants.length === 0 ? 'text-slate-400' : ''}>
-                  {participants.length === users.length 
-                      ? 'Todos os participantes' 
-                      : participants.length === 0 
-                        ? 'Selecione os participantes'
-                        : `${participants.length} participante${participants.length !== 1 ? 's' : ''}`}
-                </span>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`w-4 h-4 transition-transform ${isParticipantsOpen ? 'rotate-180' : ''}`}>
-                     <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                </svg>
-              </button>
-            
-              {isParticipantsOpen && (
-                <div className="absolute top-full left-0 w-full mt-1 bg-slate-800 border border-slate-600 rounded-md shadow-lg z-20 max-h-60 overflow-y-auto">
-                     {users.map(user => (
-                          <label key={user.id} className="flex items-center px-4 py-3 hover:bg-slate-700 cursor-pointer border-b border-slate-700/50 last:border-0 transition-colors">
-                            <input
-                              type="checkbox"
-                              checked={participants.includes(user.id)}
-                              onChange={() => toggleParticipant(user.id)}
-                              className="mr-3 w-4 h-4 accent-green-500 rounded border-slate-500 bg-slate-700 text-green-500 focus:ring-green-500 focus:ring-offset-slate-800"
-                            />
-                            <span className={`font-medium ${getUserColor(user.id)}`}>{user.name}</span>
-                          </label>
+               <label className="block text-sm font-medium text-slate-400 mb-1">
+                   {isDirectPayment ? 'Para quem foi o pagamento?' : 'Rachar com'}
+               </label>
+              
+              {isDirectPayment ? (
+                 <select
+                    value={participants[0] || ''}
+                    onChange={(e) => setParticipants([e.target.value])}
+                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-white font-sans"
+                 >
+                    <option value="">Selecione o beneficiário</option>
+                    {users.filter(u => u.id !== paidBy).map(user => (
+                        <option key={user.id} value={user.id}>{user.name}</option>
                     ))}
-                </div>
+                 </select>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setIsParticipantsOpen(!isParticipantsOpen)}
+                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-left text-white flex justify-between items-center"
+                  >
+                    <span className={participants.length === 0 ? 'text-slate-400' : ''}>
+                      {participants.length === users.length 
+                          ? 'Todos os participantes' 
+                          : participants.length === 0 
+                            ? 'Selecione os participantes'
+                            : `${participants.length} participante${participants.length !== 1 ? 's' : ''}`}
+                    </span>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`w-4 h-4 transition-transform ${isParticipantsOpen ? 'rotate-180' : ''}`}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    </svg>
+                  </button>
+                
+                  {isParticipantsOpen && (
+                    <div className="absolute top-full left-0 w-full mt-1 bg-slate-800 border border-slate-600 rounded-md shadow-lg z-20 max-h-60 overflow-y-auto">
+                        {users.map(user => (
+                              <label key={user.id} className="flex items-center px-4 py-3 hover:bg-slate-700 cursor-pointer border-b border-slate-700/50 last:border-0 transition-colors">
+                                <input
+                                  type="checkbox"
+                                  checked={participants.includes(user.id)}
+                                  onChange={() => toggleParticipant(user.id)}
+                                  className="mr-3 w-4 h-4 accent-green-500 rounded border-slate-500 bg-slate-700 text-green-500 focus:ring-green-500 focus:ring-offset-slate-800"
+                                />
+                                <span className={`font-medium ${getUserColor(user.id)}`}>{user.name}</span>
+                              </label>
+                        ))}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
