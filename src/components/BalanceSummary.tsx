@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import { calculateBalances } from '@/lib/balance'
+import { getUserColor } from '@/lib/colors'
 
 interface User {
   id: string
@@ -38,13 +39,17 @@ export default function BalanceSummary({ users, expenses }: BalanceSummaryProps)
     const userBalancesCopy = JSON.parse(JSON.stringify(userBalances)) as typeof userBalances
     const debtors = userBalancesCopy.filter(u => u.balance < -0.01).sort((a, b) => a.balance - b.balance)
     const creditors = userBalancesCopy.filter(u => u.balance > 0.01).sort((a, b) => b.balance - a.balance)
-    const suggs: string[] = []
+    const suggs: { debtor: typeof debtors[0], creditor: typeof creditors[0], amount: string }[] = []
 
     let i = 0, j = 0
     while (i < debtors.length && j < creditors.length) {
       const debt = Math.min(-debtors[i].balance, creditors[j].balance)
       const formattedDebt = debt.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-      suggs.push(`${debtors[i].name} deve pagar ${formattedDebt} para ${creditors[j].name}`)
+      suggs.push({
+          debtor: debtors[i],
+          creditor: creditors[j],
+          amount: formattedDebt
+      })
       debtors[i].balance += debt
       creditors[j].balance -= debt
       if (debtors[i].balance >= -0.01) i++
@@ -60,7 +65,7 @@ export default function BalanceSummary({ users, expenses }: BalanceSummaryProps)
       <ul className="space-y-2">
         {userBalances.map((user) => (
           <li key={user.id} className="flex justify-between items-center p-2 bg-slate-700 rounded border border-slate-600">
-            <span className="truncate mr-4 min-w-0 flex-1 border-r border-slate-600 pr-2" title={user.name}>{user.name}</span>
+            <span className={`truncate mr-4 min-w-0 flex-1 border-r border-slate-600 pr-2 font-bold ${getUserColor(user.id)}`} title={user.name}>{user.name}</span>
             <span className={`font-semibold whitespace-nowrap ${user.balance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
               {user.balance.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </span>
@@ -72,7 +77,13 @@ export default function BalanceSummary({ users, expenses }: BalanceSummaryProps)
         {suggestions.length > 0 ? (
           <ul className="space-y-1">
             {suggestions.map((sugg, index) => (
-              <li key={index} className="text-sm bg-slate-700 text-slate-200 p-2 rounded border border-slate-600">{sugg}</li>
+              <li key={index} className="text-sm bg-slate-700 text-slate-200 p-2 rounded border border-slate-600 flex flex-wrap gap-1 items-center">
+                  <span className={`font-bold ${getUserColor(sugg.debtor.id)}`}>{sugg.debtor.name}</span>
+                  <span>deve pagar</span>
+                  <span className="font-mono font-bold text-white bg-slate-800 px-1 rounded">{sugg.amount}</span>
+                  <span>para</span>
+                  <span className={`font-bold ${getUserColor(sugg.creditor.id)}`}>{sugg.creditor.name}</span>
+              </li>
             ))}
           </ul>
         ) : (

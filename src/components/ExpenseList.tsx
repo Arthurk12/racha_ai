@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { getUserColor } from '../lib/colors'
 
 interface User {
   id: string
@@ -180,7 +181,7 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
           <p className="mb-2 text-slate-300">Participantes:</p>
           <div className="flex flex-wrap gap-2">
             {users.map(user => (
-              <label key={user.id} className="flex items-center text-slate-300">
+              <label key={user.id} className={`flex items-center ${getUserColor(user.id)}`}>
                 <input
                   type="checkbox"
                   checked={participants.includes(user.id)}

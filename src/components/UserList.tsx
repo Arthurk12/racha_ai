@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { getUserColor } from '@/lib/colors'
 
 interface User {
   id: string
@@ -41,7 +42,7 @@ export default function UserList({ users, addUser, removeUser, isAdmin, onResetP
         {users.map((user) => (
           <li key={user.id} className="flex justify-between items-center p-2 bg-slate-700 rounded border border-slate-600">
             <div className="flex items-center gap-2">
-              <span className="text-slate-200">{user.name}</span>
+              <span className={`font-bold ${getUserColor(user.id)}`}>{user.name}</span>
                {user.isAdmin && <span className="text-[10px] bg-green-900 text-green-200 px-1 py-0.5 rounded uppercase tracking-wider">Admin</span>}
             </div>
             
