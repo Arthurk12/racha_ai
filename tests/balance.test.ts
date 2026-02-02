@@ -1,4 +1,4 @@
-import { calculateBalances } from '../src/lib/balance';
+import { calculateBalances, calculatePairwiseDebts } from '../src/lib/balance';
 import assert from 'assert';
 
 console.log('Running Balance Logic Tests...')
@@ -74,5 +74,82 @@ assert.ok(closeTo(result6['A'], 66.6666), 'A balance approx 66.66')
 assert.ok(closeTo(result6['B'], -33.3333), 'B balance approx -33.33')
 assert.ok(closeTo(result6['C'], -33.3333), 'C balance approx -33.33')
 console.log('Test Case 6 passed: Floating Point')
+
+// --- Pairwise Debt Tests ---
+
+// Test Case 7: Simple Pairwise Debt
+// A pays 100 for B
+const result7 = calculatePairwiseDebts(users1, [{amount: 100, paidBy: 'A', participants: ['B']}])
+assert.strictEqual(result7.length, 1)
+assert.strictEqual(result7[0].debtorId, 'B')
+assert.strictEqual(result7[0].creditorId, 'A')
+assert.strictEqual(result7[0].amount, 100)
+console.log('Test Case 7 passed: Simple Pairwise')
+
+// Test Case 8: Reciprocal Debt Cancellation
+// A pays 50 for B
+// B pays 30 for A 
+// Net: B owes A 20
+const expenses8 = [
+    {amount: 50, paidBy: 'A', participants: ['B']},
+    {amount: 30, paidBy: 'B', participants: ['A']}
+]
+const result8 = calculatePairwiseDebts(users1, expenses8)
+assert.strictEqual(result8.length, 1)
+assert.strictEqual(result8[0].debtorId, 'B')
+assert.strictEqual(result8[0].creditorId, 'A')
+assert.strictEqual(result8[0].amount, 20)
+console.log('Test Case 8 passed: Reciprocal Cancellation')
+
+// Test Case 9: No Debt Transfer (The "Julia/Felipe" case)
+// A pays 100 for B (B owes A 100)
+// B pays 50 for C (C owes B 50)
+// Global balance would say: A needs +100, B needs -50 (+100 -50), C needs -50.
+// A simplified view might suggest C pays 50 to A, B pays 50 to A.
+// But pairwise should strictly show: B->A (100) and C->B (50).
+const expenses9 = [
+    {amount: 100, paidBy: 'A', participants: ['B']},
+    {amount: 50, paidBy: 'B', participants: ['C']}
+]
+const result9 = calculatePairwiseDebts(users2, expenses9)
+// Expect 2 debts
+const debtBA = result9.find(d => d.debtorId === 'B' && d.creditorId === 'A')
+const debtCB = result9.find(d => d.debtorId === 'C' && d.creditorId === 'B')
+
+assert.ok(debtBA, 'B should owe A')
+assert.strictEqual(debtBA?.amount, 100)
+assert.ok(debtCB, 'C should owe B')
+assert.strictEqual(debtCB?.amount, 50)
+assert.strictEqual(result9.length, 2, 'Should be exactly 2 debts')
+console.log('Test Case 9 passed: No Debt Transfer')
+
+
+// Test Case 10: Complex Group Split
+// Group: A, B, C, D
+// Expense 1: A pays 400 for A, B, C, D (100 each). 
+// Debts: B->A (100), C->A (100), D->A (100)
+// Expense 2: B pays 200 for B, C (100 each).
+// Debts: C->B (100)
+// Combined:
+// B->A: 100
+// C->A: 100
+// D->A: 100
+// C->B: 100
+const users4 = [{id: 'A', name: 'A'}, {id: 'B', name: 'B'}, {id: 'C', name: 'C'}, {id: 'D', name: 'D'}]
+const expenses10 = [
+    {amount: 400, paidBy: 'A', participants: ['A', 'B', 'C', 'D']},
+    {amount: 200, paidBy: 'B', participants: ['B', 'C']}
+]
+const result10 = calculatePairwiseDebts(users4, expenses10)
+
+const findDebt = (from: string, to: string) => result10.find(d => d.debtorId === from && d.creditorId === to)
+
+assert.strictEqual(findDebt('B', 'A')?.amount, 100, 'B should owe A 100')
+assert.strictEqual(findDebt('C', 'A')?.amount, 100, 'C should owe A 100')
+assert.strictEqual(findDebt('D', 'A')?.amount, 100, 'D should owe A 100')
+assert.strictEqual(findDebt('C', 'B')?.amount, 100, 'C should owe B 100')
+assert.strictEqual(result10.length, 4, 'Should be exactly 4 debts')
+console.log('Test Case 10 passed: Complex Group Split')
+
 
 console.log('All tests passed successfully!')

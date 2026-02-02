@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { calculateBalances } from '@/lib/balance'
+import { calculateBalances, calculatePairwiseDebts } from '@/lib/balance'
 import { getUserColor } from '@/lib/colors'
 
 interface User {
@@ -35,29 +35,22 @@ export default function BalanceSummary({ users, expenses }: BalanceSummaryProps)
   }, [users, balances])
 
   const suggestions = useMemo(() => {
-    // Clone para não mutar o original
-    const userBalancesCopy = JSON.parse(JSON.stringify(userBalances)) as typeof userBalances
-    const debtors = userBalancesCopy.filter(u => u.balance < -0.01).sort((a, b) => a.balance - b.balance)
-    const creditors = userBalancesCopy.filter(u => u.balance > 0.01).sort((a, b) => b.balance - a.balance)
-    const suggs: { debtor: typeof debtors[0], creditor: typeof creditors[0], amount: string }[] = []
-
-    let i = 0, j = 0
-    while (i < debtors.length && j < creditors.length) {
-      const debt = Math.min(-debtors[i].balance, creditors[j].balance)
-      const formattedDebt = debt.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-      suggs.push({
-          debtor: debtors[i],
-          creditor: creditors[j],
-          amount: formattedDebt
+    const debts = calculatePairwiseDebts(users, expenses)
+    return debts
+      .filter(d => d.amount > 0.01)
+      .map(d => {
+        const debtor = users.find(u => u.id === d.debtorId)
+        const creditor = users.find(u => u.id === d.creditorId)
+        if (!debtor || !creditor) return null
+        
+        return {
+          debtor,
+          creditor,
+          amount: d.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+        }
       })
-      debtors[i].balance += debt
-      creditors[j].balance -= debt
-      if (debtors[i].balance >= -0.01) i++
-      if (creditors[j].balance <= 0.01) j++
-    }
-
-    return suggs
-  }, [userBalances])
+      .filter((s): s is NonNullable<typeof s> => s !== null)
+  }, [users, expenses])
 
   return (
     <div className="bg-slate-800 p-6 rounded-lg shadow-xl border border-slate-700">
