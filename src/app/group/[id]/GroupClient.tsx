@@ -135,11 +135,6 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
     }
   }
 
-  const handleAddUser = (name: string) => {
-    // Legacy support or distinct implementation if needed. 
-    // Currently users add themselves via modal.
-  }
-
   const handleRemoveUser = (userId: string) => {
     if (userId === currentUserId) {
       localStorage.removeItem(`racha_ai_user_${groupId}`)
@@ -475,7 +470,6 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
             <div className="order-4">
               <UserList 
                 users={users} 
-                addUser={handleAddUser} 
                 removeUser={handleRemoveUser} 
                 isAdmin={isCurrentUserAdmin}
                 currentUserId={currentUserId}

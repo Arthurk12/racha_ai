@@ -11,23 +11,14 @@ interface User {
 
 interface UserListProps {
   users: User[]
-  addUser: (name: string) => void
   removeUser: (id: string) => void
   isAdmin: boolean
   onResetPin: (id: string) => void
   currentUserId: string | null
 }
 
-export default function UserList({ users, addUser, removeUser, isAdmin, onResetPin, currentUserId }: UserListProps) {
-  const [newUserName, setNewUserName] = useState('')
+export default function UserList({ users, removeUser, isAdmin, onResetPin, currentUserId }: UserListProps) {
   const [linkCopied, setLinkCopied] = useState(false)
-
-  const handleAddUser = () => {
-    if (newUserName.trim()) {
-      addUser(newUserName.trim())
-      setNewUserName('')
-    }
-  }
 
   return (
     <div className="bg-slate-800 p-6 rounded-lg shadow-xl border border-slate-700 mb-6">
@@ -37,12 +28,6 @@ export default function UserList({ users, addUser, removeUser, isAdmin, onResetP
           * Para resetar um PIN esquecido, o admin pode clicar em &quot;Resetar PIN&quot; (define como 0000).
         </span>
       </div>
-      {/* 
-         Removed input based on requirement: "Gostaria de um fluxo um participante cria o grupo e convida os outros (...) Não quero impedir que um participante cadastre outro"
-         Actually user DOES NOT want to prevent creating, but prioritized invitations.
-         But since we need PIN for creation now, the simple input doesn't work well anymore.
-         For now, keeping the list display only. User invites via link.
-      */}
       
       <ul className="space-y-2">
         {users.map((user) => (
