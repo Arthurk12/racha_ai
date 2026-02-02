@@ -104,12 +104,17 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
       // Create format for backend (YYYY-MM-DD)
       const isoDate = `${year}-${month}-${day}`
       
+      // If it's a group expense (split), ensure the payer is always included implicitly
+      const finalParticipants = (!isDirectPayment && !participants.includes(paidBy)) 
+          ? [...participants, paidBy]
+          : participants
+
       addExpense({
         description: description.trim(),
         amount: parsedAmount,
         paidBy,
         date: isoDate,
-        participants
+        participants: finalParticipants
       })
       
       // Reset form
@@ -259,8 +264,16 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
                     }}
                     className="w-4 h-4 accent-green-500 rounded border-slate-500 bg-slate-700 text-green-500 focus:ring-green-500 focus:ring-offset-slate-800"
                 />
-                <label htmlFor="isDirectPayment" className="text-sm font-medium text-slate-300 cursor-pointer select-none">
-                    Pagamento individual (Não dividir a conta)
+                <label htmlFor="isDirectPayment" className="text-sm font-medium text-slate-300 cursor-pointer select-none flex items-center gap-1 group relative">
+                    Paguei por/pra alguém
+                    <span className="cursor-help text-slate-500 hover:text-slate-300 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0ZM8.94 6.94a.75.75 0 1 1-1.061-1.061 3 3 0 1 1 2.871 5.026v.345a.75.75 0 0 1-1.5 0v-.5c0-.72.57-1.172 1.081-1.287A1.5 1.5 0 1 0 8.94 6.94ZM10 15a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clipRule="evenodd" />
+                        </svg>
+                    </span>
+                    <span className="invisible group-hover:visible absolute left-0 -top-12 bg-slate-900 text-xs text-slate-200 p-2 rounded w-48 shadow-xl border border-slate-700 z-50 pointer-events-none">
+                        Use para compras individuais. Ex: Você pagou um lanche só para o João.
+                    </span>
                 </label>
             </div>
             
@@ -301,7 +314,7 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
                 
                   {isParticipantsOpen && (
                     <div className="absolute top-full left-0 w-full mt-1 bg-slate-800 border border-slate-600 rounded-md shadow-lg z-20 max-h-60 overflow-y-auto">
-                        {users.map(user => (
+                        {users.filter(user => user.id !== paidBy).map(user => (
                               <label key={user.id} className="flex items-center px-4 py-3 hover:bg-slate-700 cursor-pointer border-b border-slate-700/50 last:border-0 transition-colors">
                                 <input
                                   type="checkbox"
