@@ -33,7 +33,7 @@ export default function UserList({ users, addUser, removeUser, isAdmin, onResetP
       <div className="mb-4">
         <h2 className="text-xl font-semibold text-green-400 inline-block mr-2">Participantes</h2>
         <span className="text-[10px] text-amber-500/80 md:hidden block mt-1 leading-tight">
-          * Para resetar um PIN esquecido, o admin pode clicar em "Resetar PIN" (define como 0000).
+          * Para resetar um PIN esquecido, o admin pode clicar em &quot;Resetar PIN&quot; (define como 0000).
         </span>
       </div>
       {/* 
@@ -63,7 +63,7 @@ export default function UserList({ users, addUser, removeUser, isAdmin, onResetP
                     Resetar PIN
                   </button>
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-slate-800 text-slate-200 text-xs rounded p-2 border border-slate-600 shadow-xl opacity-0 group-hover/tooltip:opacity-100 pointer-events-none transition-opacity z-10 hidden md:block">
-                    Restaura o PIN deste usuário para "0000" caso ele tenha esquecido.
+                    Restaura o PIN deste usuário para &quot;0000&quot; caso ele tenha esquecido.
                   </div>
                    {/* Mobile helper below button visible on click/active or just static text if easier, but requested mechanism working on mobile. 
                        Simple approach: Alert confiramtion already exists in parent component. 
