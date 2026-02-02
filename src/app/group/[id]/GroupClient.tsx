@@ -59,8 +59,8 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
 
   useEffect(() => {
     if (expenses.length > prevExpenseCount) {
-        // Use a more reliable sound source (Cash Register Kaching)
-        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3')
+        // Use local sound asset for better performance
+        const audio = new Audio('/sounds/cash-register.mp3')
         audio.volume = 0.5
         audio.play().catch(console.error)
     }
