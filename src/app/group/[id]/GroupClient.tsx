@@ -391,35 +391,45 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="flex flex-col gap-6">
-            <BalanceSummary users={users} expenses={expenses} />
+          <div className="contents md:flex md:flex-col md:gap-6">
+            <div className="order-1">
+              <BalanceSummary users={users} expenses={expenses} />
+            </div>
             
-            <ExpenseHistory 
+            <div className="order-3">
+              <ExpenseHistory 
+                  users={users} 
+                  expenses={expenses} 
+                  removeExpense={handleRemoveExpense} 
+                  updateExpense={handleUpdateExpense} 
+                  currentUserId={currentUserId}
+                  isAdmin={isCurrentUserAdmin}
+              />
+            </div>
+          </div>
+          <div className="contents md:flex md:flex-col md:gap-6">
+            <div className="order-2">
+              <ExpenseList 
                 users={users} 
                 expenses={expenses} 
-                removeExpense={handleRemoveExpense}               updateExpense={handleUpdateExpense}                currentUserId={currentUserId}
+                addExpense={handleAddExpense} 
+                removeExpense={handleRemoveExpense} 
+                currentUserId={currentUserId}
+                isPending={isPending}
                 isAdmin={isCurrentUserAdmin}
-            />
-          </div>
-          <div className="flex flex-col gap-6">
-            <ExpenseList 
-              users={users} 
-              expenses={expenses} 
-              addExpense={handleAddExpense} 
-              removeExpense={handleRemoveExpense} 
-              currentUserId={currentUserId}
-              isPending={isAddingExpense}
-              isAdmin={isCurrentUserAdmin}
-            />
-            {isPending && <p className="text-sm text-green-400 mb-2 animate-pulse">Atualizando...</p>}
-            <UserList 
-              users={users} 
-              addUser={handleAddUser} 
-              removeUser={handleRemoveUser} 
-              isAdmin={isCurrentUserAdmin}
-              currentUserId={currentUserId}
-              onResetPin={handleResetPin}
-            />
+              />
+              {isPending && <p className="text-sm text-green-400 mb-2 animate-pulse mt-2">Atualizando...</p>}
+            </div>
+            <div className="order-4">
+              <UserList 
+                users={users} 
+                addUser={handleAddUser} 
+                removeUser={handleRemoveUser} 
+                isAdmin={isCurrentUserAdmin}
+                currentUserId={currentUserId}
+                onResetPin={handleResetPin}
+              />
+            </div>
           </div>
         </div>
         {isCurrentUserAdmin && (
