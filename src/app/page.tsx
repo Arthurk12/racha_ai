@@ -157,6 +157,13 @@ export default function Home() {
           >
            {isPending ? 'Criando...' : 'Criar Grupo'}
           </button>
+          
+          <div className="mt-6 pt-6 border-t border-slate-700/50 text-center">
+            <p className="text-xs text-slate-500 leading-relaxed">
+              ⚠️ <span className="font-medium text-slate-400">Procurando um grupo específico?</span><br/>
+              Para entrar em um grupo existente, você precisa do <strong>link de convite</strong>. Peça para seus amigos compartilharem com você e acesse pelo link.
+            </p>
+          </div>
         </form>
       </div>
     </div>

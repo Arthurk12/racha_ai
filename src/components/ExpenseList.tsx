@@ -250,20 +250,34 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
             )}
 
             <div className="flex items-center gap-2 py-1">
-                <input
-                    type="checkbox"
-                    id="isDirectPayment"
-                    checked={isDirectPayment}
-                    onChange={(e) => {
-                        setIsDirectPayment(e.target.checked)
-                        if (e.target.checked) {
-                            setParticipants([]) // Clear to force selection
-                        } else {
-                            setParticipants(users.map(u => u.id)) // Reset to all
-                        }
-                    }}
-                    className="w-4 h-4 accent-green-500 rounded border-slate-500 bg-slate-700 text-green-500 focus:ring-green-500 focus:ring-offset-slate-800"
-                />
+                <div className="relative flex items-center justify-center w-4 h-4">
+                    <input
+                        type="checkbox"
+                        id="isDirectPayment"
+                        checked={isDirectPayment}
+                        onChange={(e) => {
+                            setIsDirectPayment(e.target.checked)
+                            if (e.target.checked) {
+                                setParticipants([]) // Clear to force selection
+                            } else {
+                                setParticipants(users.map(u => u.id)) // Reset to all
+                            }
+                        }}
+                        className="peer appearance-none w-4 h-4 border border-green-500 rounded bg-transparent cursor-pointer"
+                    />
+                    <svg 
+                        className="absolute w-3 h-3 text-green-500 pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="4" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                    >
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
                 <label htmlFor="isDirectPayment" className="text-sm font-medium text-slate-300 cursor-pointer select-none flex items-center gap-1 group relative">
                     Paguei por/pra alguém
                     <span className="cursor-help text-slate-500 hover:text-slate-300 transition-colors">
@@ -282,53 +296,64 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
                    {isDirectPayment ? 'Para quem foi o pagamento?' : 'Rachar com'}
                </label>
               
-              {isDirectPayment ? (
-                 <select
-                    value={participants[0] || ''}
-                    onChange={(e) => setParticipants([e.target.value])}
-                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-white font-sans"
-                 >
-                    <option value="">Selecione o beneficiário</option>
-                    {users.filter(u => u.id !== paidBy).map(user => (
-                        <option key={user.id} value={user.id}>{user.name}</option>
-                    ))}
-                 </select>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => setIsParticipantsOpen(!isParticipantsOpen)}
-                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-left text-white flex justify-between items-center"
-                  >
-                    <span className={participants.length === 0 ? 'text-slate-400' : ''}>
-                      {participants.length === users.length 
-                          ? 'Todos os participantes' 
-                          : participants.length === 0 
-                            ? 'Selecione os participantes'
-                            : `${participants.length} participante${participants.length !== 1 ? 's' : ''}`}
-                    </span>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`w-4 h-4 transition-transform ${isParticipantsOpen ? 'rotate-180' : ''}`}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                    </svg>
-                  </button>
-                
-                  {isParticipantsOpen && (
-                    <div className="absolute top-full left-0 w-full mt-1 bg-slate-800 border border-slate-600 rounded-md shadow-lg z-20 max-h-60 overflow-y-auto">
-                        {users.filter(user => user.id !== paidBy).map(user => (
-                              <label key={user.id} className="flex items-center px-4 py-3 hover:bg-slate-700 cursor-pointer border-b border-slate-700/50 last:border-0 transition-colors">
-                                <input
-                                  type="checkbox"
-                                  checked={participants.includes(user.id)}
-                                  onChange={() => toggleParticipant(user.id)}
-                                  className="mr-3 w-4 h-4 accent-green-500 rounded border-slate-500 bg-slate-700 text-green-500 focus:ring-green-500 focus:ring-offset-slate-800"
-                                />
-                                <span className={`font-medium ${getUserColor(user.id)}`}>{user.name}</span>
-                              </label>
-                        ))}
+              {(() => {
+                  const availableParticipants = users.filter(u => u.id !== paidBy)
+                  const isSplitDisabled = availableParticipants.length === 0
+                  
+                  return isDirectPayment ? (
+                     <div title={isSplitDisabled ? "Adicione mais pessoas ao grupo." : ""}>
+                         <select
+                            value={participants[0] || ''}
+                            onChange={(e) => setParticipants([e.target.value])}
+                            disabled={isSplitDisabled}
+                            className={`w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-white font-sans ${isSplitDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                         >
+                            <option value="">{isSplitDisabled ? "Sem ninguém para pagar" : "Selecione o beneficiário"}</option>
+                            {availableParticipants.map(user => (
+                                <option key={user.id} value={user.id}>{user.name}</option>
+                            ))}
+                         </select>
+                     </div>
+                  ) : (
+                    <div title={isSplitDisabled ? "Adicione mais pessoas ao grupo." : ""}>
+                      <button
+                        type="button"
+                        onClick={() => setIsParticipantsOpen(!isParticipantsOpen)}
+                        disabled={isSplitDisabled}
+                        className={`w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-left text-white flex justify-between items-center ${isSplitDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        <span className={participants.length === 0 ? 'text-slate-400' : ''}>
+                          {isSplitDisabled
+                              ? 'Sem outros participantes'
+                              : participants.length === users.length 
+                              ? 'Todos os participantes' 
+                              : participants.length === 0 
+                                ? 'Selecione os participantes'
+                                : `${participants.length} participante${participants.length !== 1 ? 's' : ''}`}
+                        </span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`w-4 h-4 transition-transform ${isParticipantsOpen ? 'rotate-180' : ''}`}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                        </svg>
+                      </button>
+                    
+                      {isParticipantsOpen && !isSplitDisabled && (
+                        <div className="absolute top-full left-0 w-full mt-1 bg-slate-800 border border-slate-600 rounded-md shadow-lg z-20 max-h-60 overflow-y-auto">
+                            {availableParticipants.map(user => (
+                                  <label key={user.id} className="flex items-center px-4 py-3 hover:bg-slate-700 cursor-pointer border-b border-slate-700/50 last:border-0 transition-colors">
+                                    <input
+                                      type="checkbox"
+                                      checked={participants.includes(user.id)}
+                                      onChange={() => toggleParticipant(user.id)}
+                                      className="mr-3 w-4 h-4 accent-green-500 rounded border-slate-500 bg-slate-700 text-green-500 focus:ring-green-500 focus:ring-offset-slate-800"
+                                    />
+                                    <span className={`font-medium ${getUserColor(user.id)}`}>{user.name}</span>
+                                  </label>
+                            ))}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </>
-              )}
+                  )
+              })()}
             </div>
           </div>
         )}

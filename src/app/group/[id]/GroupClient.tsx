@@ -49,6 +49,7 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
   const [authPin, setAuthPin] = useState('')
   const [authError, setAuthError] = useState('')
   const [selectedExistingUserId, setSelectedExistingUserId] = useState('')
+  const [authMode, setAuthMode] = useState<'existing' | 'new'>('existing') // 'existing' | 'new'
   const [inviteLink, setInviteLink] = useState('')
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const [linkCopied, setLinkCopied] = useState(false)
@@ -83,48 +84,54 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
 
   const handleJoin = async () => {
     setAuthError('')
-    
-    if (selectedExistingUserId) {
-      if (!authPin || authPin.length < 4) {
-        setAuthError('Digite o PIN de 4 dígitos')
-        return
-      }
-
-      startTransition(async () => {
-        const isValid = await verifyUser(selectedExistingUserId, authPin)
-        if (isValid) {
-          localStorage.setItem(`racha_ai_user_${groupId}`, selectedExistingUserId)
-          setCurrentUserId(selectedExistingUserId)
-          setShowAuthModal(false)
-          setAuthPin('')
-        } else {
-          setAuthError('PIN incorreto')
+    if (authMode === 'existing') {
+        if (!selectedExistingUserId) {
+            setAuthError('Selecione seu nome')
+            return
         }
-      })
-      return
-    }
-
-    if (authName.trim()) {
-       if (!authPin || authPin.length < 4) {
-        setAuthError('Crie um PIN de 4 dígitos')
-        return
-      }
-
-      const formData = new FormData()
-      formData.append('name', authName.trim())
-      formData.append('pin', authPin)
-      
-      startTransition(async () => {
-        const result: any = await addUser(groupId, formData)
-        if (result.error) {
-          setAuthError(result.error)
-        } else if (result.user) {
-          localStorage.setItem(`racha_ai_user_${groupId}`, result.user.id)
-          setCurrentUserId(result.user.id)
-          setShowAuthModal(false)
-          setAuthPin('')
+        
+        if (!authPin || authPin.length < 4) {
+             setAuthError('Digite o PIN de 4 dígitos')
+             return
         }
-      })
+
+        startTransition(async () => {
+            const isValid = await verifyUser(selectedExistingUserId, authPin)
+            if (isValid) {
+            localStorage.setItem(`racha_ai_user_${groupId}`, selectedExistingUserId)
+            setCurrentUserId(selectedExistingUserId)
+            setShowAuthModal(false)
+            setAuthPin('')
+            } else {
+            setAuthError('PIN incorreto')
+            }
+        })
+    } else {
+        // Mode 'new'
+        if (!authName.trim()) {
+             setAuthError('Digite seu nome')
+             return
+        }
+        if (!authPin || authPin.length < 4) {
+            setAuthError('Crie um PIN de 4 dígitos')
+            return
+        }
+
+        const formData = new FormData()
+        formData.append('name', authName.trim())
+        formData.append('pin', authPin)
+        
+        startTransition(async () => {
+            const result: any = await addUser(groupId, formData)
+            if (result.error) {
+            setAuthError(result.error)
+            } else if (result.user) {
+            localStorage.setItem(`racha_ai_user_${groupId}`, result.user.id)
+            setCurrentUserId(result.user.id)
+            setShowAuthModal(false)
+            setAuthPin('')
+            }
+        })
     }
   }
 
@@ -218,69 +225,114 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
                 Racha AI
             </h1>
             <p className="text-center text-slate-400 mb-6">Você foi convidado para o grupo <span className="text-slate-200 font-semibold">{groupName}</span></p>
-            
-            <h2 className="text-xl font-bold mb-4 text-center text-white">Quem é você?</h2>
-            
-            {users.length > 0 && (
-              <div className="mb-6">
-                <p className="mb-2 text-slate-300 font-medium">Já estou no grupo:</p>
-                <select 
-                  value={selectedExistingUserId}
-                  onChange={(e) => {
-                    setSelectedExistingUserId(e.target.value)
-                    setAuthName('')
-                    setAuthPin('')
-                    setAuthError('')
-                  }}
-                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded mb-2 text-white outline-none focus:ring-2 focus:ring-green-400 font-sans"
-                >
-                  <option value="">Selecione seu nome...</option>
-                  {users.map(u => (
-                    <option key={u.id} value={u.id}>{u.name}</option>
-                  ))}
-                </select>
-              </div>
-            )}
 
-            <div className="mb-4">
-              <p className="mb-2 text-slate-300 font-medium">{users.length > 0 ? 'Ou sou novo aqui:' : 'Digite seu nome para começar:'}</p>
-              <input
-                type="text"
-                placeholder="Seu nome"
-                value={authName}
-                onChange={(e) => {
-                  setAuthName(e.target.value)
-                  setSelectedExistingUserId('')
-                  setAuthPin('')
-                  setAuthError('')
-                }}
-                disabled={!!selectedExistingUserId}
-                className={`w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white outline-none focus:ring-2 focus:ring-green-400 placeholder-slate-500 ${selectedExistingUserId ? 'opacity-50' : ''}`}
-              />
-            </div>
+            <h2 className="text-xl font-bold mb-6 text-center text-white">Quem é você?</h2>
             
-            <div className="mb-6">
-               <p className="mb-2 text-slate-300 font-medium">
-                 {selectedExistingUserId ? 'Digite seu PIN:' : 'Crie um PIN (4 dígitos):'}
-               </p>
-               <input
-                type="password"
-                placeholder="****"
-                maxLength={4}
-                value={authPin}
-                onChange={(e) => setAuthPin(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white outline-none focus:ring-2 focus:ring-green-400 placeholder-slate-500 tracking-widest text-center text-xl"
-                onKeyPress={(e) => e.key === 'Enter' && handleJoin()}
-              />
-              {authError && <p className="text-red-400 text-sm mt-2 font-medium">{authError}</p>}
+            <div className="space-y-4">
+                {/* Accordion Item 1: Existing User */}
+                <div className={`border ${authMode === 'existing' ? 'border-green-500/50 bg-slate-700/50' : 'border-slate-700 bg-slate-800'} rounded-lg transition-all overflow-hidden`}>
+                    <button 
+                        onClick={() => {
+                            setAuthMode('existing')
+                            setAuthError('')
+                            setAuthPin('')
+                        }}
+                        className="w-full px-4 py-3 flex items-center justify-between text-left focus:outline-none"
+                    >
+                         <span className={`font-medium ${authMode === 'existing' ? 'text-green-400' : 'text-slate-400'}`}>Já estou no grupo</span>
+                         <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${authMode === 'existing' ? 'border-green-400' : 'border-slate-500'}`}>
+                              {authMode === 'existing' && <div className="w-2 h-2 bg-green-400 rounded-full" />}
+                         </div>
+                    </button>
+                    
+                    {authMode === 'existing' && (
+                        <div className="px-4 pb-4 animate-in slide-in-from-top-2 duration-200">
+                             <p className="text-xs text-slate-400 mb-2">Selecione seu nome e digite seu PIN.</p>
+                             {users.length > 0 ? (
+                                <select 
+                                    value={selectedExistingUserId}
+                                    onChange={(e) => {
+                                        setSelectedExistingUserId(e.target.value)
+                                        setAuthError('')
+                                    }}
+                                    className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded mb-3 text-white outline-none focus:ring-1 focus:ring-green-400 font-sans"
+                                >
+                                    <option value="">Selecione seu nome...</option>
+                                    {users.map(u => (
+                                        <option key={u.id} value={u.id}>{u.name}</option>
+                                    ))}
+                                </select>
+                             ) : (
+                                 <p className="text-sm text-yellow-500 mb-3 bg-yellow-900/20 p-2 rounded border border-yellow-900/50">
+                                     Ainda não há ninguém no grupo. Use a opção abaixo para entrar.
+                                 </p>
+                             )}
+
+                             <input
+                                type="password"
+                                placeholder="Seu PIN (4 dígitos)"
+                                maxLength={4}
+                                value={authPin}
+                                onChange={(e) => setAuthPin(e.target.value)}
+                                disabled={!selectedExistingUserId && users.length > 0}
+                                className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded text-white outline-none focus:ring-1 focus:ring-green-400 placeholder-slate-600 tracking-widest text-center"
+                                onKeyPress={(e) => e.key === 'Enter' && handleJoin()}
+                            />
+                        </div>
+                    )}
+                </div>
+
+                {/* Accordion Item 2: New User */}
+                <div className={`border ${authMode === 'new' ? 'border-green-500/50 bg-slate-700/50' : 'border-slate-700 bg-slate-800'} rounded-lg transition-all overflow-hidden`}>
+                    <button 
+                        onClick={() => {
+                            setAuthMode('new')
+                            setAuthError('')
+                            setAuthPin('')
+                        }}
+                        className="w-full px-4 py-3 flex items-center justify-between text-left focus:outline-none"
+                    >
+                         <span className={`font-medium ${authMode === 'new' ? 'text-green-400' : 'text-slate-400'}`}>Sou novo aqui</span>
+                         <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${authMode === 'new' ? 'border-green-400' : 'border-slate-500'}`}>
+                              {authMode === 'new' && <div className="w-2 h-2 bg-green-400 rounded-full" />}
+                         </div>
+                    </button>
+                    
+                    {authMode === 'new' && (
+                        <div className="px-4 pb-4 animate-in slide-in-from-top-2 duration-200">
+                            <p className="text-xs text-slate-400 mb-2">Crie seu perfil e defina um PIN de acesso.</p>
+                            <input
+                                type="text"
+                                placeholder="Seu Nome"
+                                value={authName}
+                                onChange={(e) => setAuthName(e.target.value)}
+                                className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded mb-3 text-white outline-none focus:ring-1 focus:ring-green-400 placeholder-slate-600"
+                            />
+                             <input
+                                type="password"
+                                placeholder="Crie um PIN (4 dígitos)"
+                                maxLength={4}
+                                value={authPin}
+                                onChange={(e) => setAuthPin(e.target.value)}
+                                className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded text-white outline-none focus:ring-1 focus:ring-green-400 placeholder-slate-600 tracking-widest text-center"
+                                onKeyPress={(e) => e.key === 'Enter' && handleJoin()}
+                            />
+                        </div>
+                    )}
+                </div>
             </div>
+
+            {authError && <p className="text-red-400 text-sm mt-4 font-medium text-center bg-red-900/20 p-2 rounded border border-red-900/30">{authError}</p>}
 
             <button
               onClick={handleJoin}
-              disabled={(!authName.trim() && !selectedExistingUserId) || authPin.length < 4}
-              className="w-full bg-green-500 text-slate-900 py-2 rounded hover:bg-green-400 disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors font-bold text-lg"
+              disabled={
+                  (authMode === 'existing' && (!selectedExistingUserId || authPin.length < 4)) ||
+                  (authMode === 'new' && (!authName.trim() || authPin.length < 4))
+              }
+              className="w-full bg-green-500 text-slate-900 py-3 rounded hover:bg-green-400 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed transition-all font-bold text-lg mt-6 shadow-lg"
             >
-              {isPending ? 'Entrando...' : (selectedExistingUserId ? 'Entrar' : 'Entrar no Grupo')}
+              {isPending ? 'Entrando...' : 'Entrar no Grupo'}
             </button>
           </div>
         </div>
