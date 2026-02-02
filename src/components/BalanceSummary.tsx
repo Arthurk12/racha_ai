@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { calculateBalances, calculatePairwiseDebts } from '@/lib/balance'
+import { calculateBalances, calculatePairwiseDebts, getDebtBreakdown } from '@/lib/balance'
 import { getUserColor } from '@/lib/colors'
 
 interface User {
@@ -15,6 +15,7 @@ interface Expense {
   amount: number
   paidBy: string
   participants: string[]
+  date?: string | Date
 }
 
 interface BalanceSummaryProps {
@@ -24,6 +25,7 @@ interface BalanceSummaryProps {
 
 export default function BalanceSummary({ users, expenses }: BalanceSummaryProps) {
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null)
+  const [expandedSuggestionIndex, setExpandedSuggestionIndex] = useState<number | null>(null)
 
   const balances = useMemo(() => {
     return calculateBalances(users, expenses)
@@ -135,16 +137,60 @@ export default function BalanceSummary({ users, expenses }: BalanceSummaryProps)
       <div className="mt-4">
         <h3 className="text-lg font-semibold mb-2 text-green-400">Sugestões de Pagamento</h3>
         {suggestions.length > 0 ? (
-          <ul className="space-y-1">
-            {suggestions.map((sugg, index) => (
-              <li key={index} className="text-sm bg-slate-700 text-slate-200 p-2 rounded border border-slate-600 flex flex-wrap gap-1 items-center">
-                  <span className={`font-bold ${getUserColor(sugg.debtor.id)}`}>{sugg.debtor.name}</span>
-                  <span>deve pagar</span>
-                  <span className="font-mono font-bold text-white bg-slate-800 px-1 rounded">{sugg.amount}</span>
-                  <span>para</span>
-                  <span className={`font-bold ${getUserColor(sugg.creditor.id)}`}>{sugg.creditor.name}</span>
+          <ul className="space-y-2">
+            {suggestions.map((sugg, index) => {
+              const isExpanded = expandedSuggestionIndex === index
+              const breakdown = isExpanded ? getDebtBreakdown(sugg.debtor.id, sugg.creditor.id, expenses) : []
+
+              return (
+              <li key={index} className="bg-slate-700 text-slate-200 rounded border border-slate-600 flex flex-col">
+                  <div 
+                    className="p-3 flex flex-wrap gap-2 items-center cursor-pointer hover:bg-slate-600/50 transition-colors"
+                    onClick={() => setExpandedSuggestionIndex(isExpanded ? null : index)}
+                  >
+                    <span className={`font-bold ${getUserColor(sugg.debtor.id)}`}>{sugg.debtor.name}</span>
+                    <span>deve pagar</span>
+                    <span className="font-mono font-bold text-white bg-slate-800 px-1 rounded">{sugg.amount}</span>
+                    <span>para</span>
+                    <span className={`font-bold ${getUserColor(sugg.creditor.id)}`}>{sugg.creditor.name}</span>
+                    <span className="ml-auto text-xs text-slate-400">{isExpanded ? '▲' : '▼ Ver detalhes'}</span>
+                  </div>
+
+                  {isExpanded && (
+                    <div className="bg-slate-800/50 p-3 border-t border-slate-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                      <p className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">Origem do Saldo</p>
+                      {breakdown.length === 0 ? (
+                        <p className="text-xs text-slate-500 italic">Nenhum registro detalhado encontrado.</p>
+                      ) : (
+                        <ul className="space-y-2 text-sm">
+                            {breakdown.map((item, idx) => {
+                                // Logic: If isPayer=true (user1/Debtor paid), it reduces the debt (-)
+                                // If isPayer=false (user2/Creditor paid), it increases the debt (+)
+                                const isDebtorPaying = item.isPayer
+                                const valueSign = isDebtorPaying ? '-' : '+'
+                                const textColor = isDebtorPaying ? 'text-green-400' : 'text-red-400'
+
+                                return (
+                                  <li key={idx} className="flex justify-between items-start border-b border-slate-700/50 pb-1 last:border-0 pl-2 border-l-2" style={{borderLeftColor: isDebtorPaying ? '#4ade80' : '#f87171'}}>
+                                      <div className="flex flex-col">
+                                          <span className="text-slate-300 font-medium">{item.description}</span>
+                                          <span className="text-[10px] text-slate-500">
+                                              {item.date ? new Date(item.date).toLocaleDateString() : 'Sem data'} • 
+                                              {isDebtorPaying ? ` ${sugg.debtor.name} pagou` : ` ${sugg.creditor.name} pagou`}
+                                          </span>
+                                      </div>
+                                      <span className={`font-mono ${textColor} ml-4 whitespace-nowrap`}>
+                                          {valueSign} {item.oweAmount.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}
+                                      </span>
+                                  </li>
+                                )
+                            })}
+                        </ul>
+                      )}
+                    </div>
+                  )}
               </li>
-            ))}
+            )})}
           </ul>
         ) : (
           <p className="text-sm text-slate-400">Todos quite!</p>

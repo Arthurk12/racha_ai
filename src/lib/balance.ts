@@ -4,9 +4,61 @@ export interface User {
 }
 
 export interface Expense {
+  id?: string
+  description?: string
+  date?: Date | string
   amount: number
   paidBy: string
   participants: string[]
+}
+
+export interface DebtBreakdownItem {
+  expenseId?: string
+  description: string
+  date?: Date | string
+  totalAmount: number
+  oweAmount: number
+  isPayer: boolean // true = user paid and other owes (Credit); false = other paid and user owes (Debt)
+}
+
+export function getDebtBreakdown(user1Id: string, user2Id: string, expenses: Expense[]): DebtBreakdownItem[] {
+  const breakdown: DebtBreakdownItem[] = []
+
+  expenses.forEach(expense => {
+    if (expense.participants.length === 0) return
+    const splitAmount = expense.amount / expense.participants.length
+    
+    // Case 1: user1 paid, user2 participated -> user2 owes user1 (Credit for u1)
+    if (expense.paidBy === user1Id && expense.participants.includes(user2Id)) {
+      breakdown.push({
+        expenseId: expense.id,
+        description: expense.description || 'Despesa sem descrição',
+        date: expense.date,
+        totalAmount: expense.amount,
+        oweAmount: splitAmount,
+        isPayer: true
+      })
+    }
+    
+    // Case 2: user2 paid, user1 participated -> user1 owes user2 (Debt for u1)
+    if (expense.paidBy === user2Id && expense.participants.includes(user1Id)) {
+      breakdown.push({
+        expenseId: expense.id,
+        description: expense.description || 'Despesa sem descrição',
+        date: expense.date,
+        totalAmount: expense.amount,
+        oweAmount: splitAmount,
+        isPayer: false
+      })
+    }
+  })
+
+  // Sort by date descending if available
+  return breakdown.sort((a, b) => {
+    const dateA = a.date ? new Date(a.date).getTime() : 0
+    const dateB = b.date ? new Date(b.date).getTime() : 0
+    return dateB - dateA
+  })
 }
 
 export function calculateBalances(users: User[], expenses: Expense[]) {
