@@ -20,6 +20,7 @@ interface UserListProps {
 
 export default function UserList({ users, addUser, removeUser, isAdmin, onResetPin, currentUserId }: UserListProps) {
   const [newUserName, setNewUserName] = useState('')
+  const [linkCopied, setLinkCopied] = useState(false)
 
   const handleAddUser = () => {
     if (newUserName.trim()) {
@@ -87,7 +88,16 @@ export default function UserList({ users, addUser, removeUser, isAdmin, onResetP
         ))}
       </ul>
       <p className="text-xs text-slate-500 mt-4">
-        Convide amigos enviando o link do grupo. Eles criarão seus próprios perfis ao entrar.
+        Convide amigos enviando o <button 
+          onClick={() => {
+            navigator.clipboard.writeText(window.location.href); 
+            setLinkCopied(true);
+            setTimeout(() => setLinkCopied(false), 2000);
+          }} 
+          className="text-green-400 hover:text-green-300 underline cursor-pointer bg-transparent border-none p-0 inline transition-all"
+        >
+          {linkCopied ? 'link (copiado!)' : 'link'}
+        </button> do grupo. Eles criarão seus próprios perfis ao entrar.
       </p>
     </div>
   )
