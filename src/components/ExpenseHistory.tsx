@@ -50,7 +50,7 @@ const getCategoryIcon = (description: string, isSettlement?: boolean) => {
   return '📝'
 }
 
-export default function ExpenseHistory({ users, expenses, removeExpense, updateExpense, currentUserId, isAdmin, pendingId }: ExpenseHistoryProps) {
+export default function ExpenseHistory({ users, expenses, removeExpense, updateExpense, currentUserId, isAdmin, onShowToast, pendingId }: ExpenseHistoryProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isMaximized, setIsMaximized] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
