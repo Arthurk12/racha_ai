@@ -60,29 +60,29 @@ export default function UserList({ users, removeUser, isAdmin, onResetPin, onTog
       
       <ul className="space-y-2">
         {users.map((user) => (
-          <li key={user.id} className="flex justify-between items-center p-2 bg-slate-700 rounded border border-slate-600">
-            <div className="flex items-center gap-2">
-                <div className="flex flex-col">
-                    <span className={`font-bold flex items-center gap-2 ${getUserColor(user.id)}`}>
-                        {user.name} 
-                        {user.id === currentUserId && <span className="text-slate-400 font-normal text-xs">(você)</span>}
+          <li key={user.id} className="flex justify-between items-center p-2 bg-slate-700 rounded border border-slate-600 gap-3">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="flex flex-col min-w-0">
+                    <div className={`font-bold flex items-center gap-2 ${getUserColor(user.id)}`}>
+                        <span className="truncate">{user.name}</span>
+                        {user.id === currentUserId && <span className="text-slate-400 font-normal text-xs flex-shrink-0">(você)</span>}
                         {user.hasFinishedAdding && (
-                            <span className="text-[10px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded border border-green-500/30 font-semibold flex items-center gap-1" title="Finalizou os lançamentos">
+                            <span className="text-[10px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded border border-green-500/30 font-semibold flex items-center gap-1 flex-shrink-0" title="Finalizou os lançamentos">
                                 ✓ <span className="hidden sm:inline">Pronto</span>
                             </span>
                         )}
-                    </span>
+                    </div>
                 </div>
-               {user.isAdmin && <span className="text-[10px] bg-green-900 text-green-200 px-1 py-0.5 rounded uppercase tracking-wider">Admin</span>}
+               {user.isAdmin && <span className="text-[10px] bg-green-900 text-green-200 px-1 py-0.5 rounded uppercase tracking-wider flex-shrink-0">Admin</span>}
             </div>
             
-            <div className="flex gap-4 items-center">
+            <div className="flex gap-2 items-center flex-shrink-0">
                {currentUserId === user.id && (
                   <div className="relative group/finish flex items-center">
                       <button
                         onClick={handleToggleFinishedLocal}
                         disabled={pendingId === `toggle-finished-${user.id}`}
-                        className={`text-xs uppercase font-bold p-2 md:px-2 md:py-1 rounded border transition-colors flex items-center gap-1 ${user.hasFinishedAdding ? 'bg-green-600 text-white border-green-500 hover:bg-green-500' : 'bg-slate-800 text-slate-400 border-slate-600 hover:bg-slate-700 hover:text-white'} ${pendingId === `toggle-finished-${user.id}` ? 'opacity-70 cursor-not-allowed' : ''}`}
+                        className={`text-xs uppercase font-bold px-2 py-0.5 rounded border transition-colors flex items-center gap-1 ${user.hasFinishedAdding ? 'bg-green-600 text-white border-green-500 hover:bg-green-500' : 'bg-slate-800 text-slate-400 border-slate-600 hover:bg-slate-700 hover:text-white'} ${pendingId === `toggle-finished-${user.id}` ? 'opacity-70 cursor-not-allowed' : ''}`}
                       >
                           {pendingId === `toggle-finished-${user.id}` && (
                             <svg className="animate-spin h-3 w-3 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -131,8 +131,8 @@ export default function UserList({ users, removeUser, isAdmin, onResetPin, onTog
                 </div>
                )}
                
-               {/* Show remove button if I am admin OR if it is myself */}
-               {(isAdmin || (currentUserId && user.id === currentUserId)) && (
+               {/* Show remove button only if I am admin AND it is NOT myself */}
+               {(isAdmin && user.id !== currentUserId) && (
                 <button
                   onClick={() => removeUser(user.id)}
                   disabled={pendingId === `remove-user-${user.id}`}

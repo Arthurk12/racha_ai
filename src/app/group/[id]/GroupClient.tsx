@@ -329,11 +329,11 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
   // O fundo é escuro para focar na entrada.
   if (showAuthModal) {
       return (
-        <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-             <div className="bg-slate-800 p-8 rounded-lg shadow-2xl max-w-md w-full border border-slate-700">
-            <h1 className="text-3xl font-bold mb-2 text-center text-green-400 flex items-center justify-center gap-2">
+        <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 overflow-x-hidden">
+             <div className="bg-slate-800 p-6 rounded-lg shadow-2xl max-w-md w-full border border-slate-700">
+            <h1 className="text-3xl font-bold mb-2 text-center text-green-400 flex items-center justify-center gap-2 flex-wrap">
                 <Image src="/icon" alt="Logo" width={32} height={32} className="rounded-full shadow-sm" />
-                Racha AI
+                <span>Racha AI</span>
             </h1>
             <p className="text-center text-slate-400 mb-6">Você foi convidado para o grupo <span className="text-slate-200 font-semibold">{groupName}</span></p>
 
@@ -701,7 +701,7 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
 
         {/* Notification Toast */}
       {notification && (
-        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-full shadow-2xl border flex items-center gap-3 animate-in slide-in-from-top-4 fade-in duration-300 ${
+        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-full shadow-2xl border flex items-center gap-3 animate-in slide-in-from-top-4 fade-in duration-300 max-w-[90vw] w-max ${
             notification.type === 'success' ? 'bg-green-900/90 border-green-500 text-green-100' :
             notification.type === 'error' ? 'bg-red-900/90 border-red-500 text-red-100' :
             'bg-slate-800/90 border-slate-600 text-slate-100'
