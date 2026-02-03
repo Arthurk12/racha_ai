@@ -5,6 +5,7 @@ import UserList from '@/components/UserList'
 import ExpenseList from '@/components/ExpenseList'
 import ExpenseHistory from '@/components/ExpenseHistory'
 import BalanceSummary from '@/components/BalanceSummary'
+import CustomSelect from '@/components/CustomSelect'
 import { addUser, removeUser, addExpense, removeExpense, updateExpense, verifyUser, resetUserPin, updateUserPin, deleteGroup } from '@/app/actions'
 import { useTransition } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
@@ -225,7 +226,7 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
             
             <div className="space-y-4">
                 {/* Accordion Item 1: Existing User */}
-                <div className={`border ${authMode === 'existing' ? 'border-green-500/50 bg-slate-700/50' : 'border-slate-700 bg-slate-800'} rounded-lg transition-all overflow-hidden`}>
+                <div className={`border ${authMode === 'existing' ? 'border-green-500/50 bg-slate-700/50' : 'border-slate-700 bg-slate-800'} rounded-lg transition-all ${authMode === 'existing' ? 'overflow-visible' : 'overflow-hidden'}`}>
                     <button 
                         onClick={() => {
                             setAuthMode('existing')
@@ -244,19 +245,16 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
                         <div className="px-4 pb-4 animate-in slide-in-from-top-2 duration-200">
                              <p className="text-xs text-slate-400 mb-2">Selecione seu nome e digite seu PIN.</p>
                              {users.length > 0 ? (
-                                <select 
+                                <CustomSelect 
                                     value={selectedExistingUserId}
-                                    onChange={(e) => {
-                                        setSelectedExistingUserId(e.target.value)
+                                    onChange={(val) => {
+                                        setSelectedExistingUserId(val)
                                         setAuthError('')
                                     }}
-                                    className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded mb-3 text-white outline-none focus:ring-1 focus:ring-green-400 font-sans"
-                                >
-                                    <option value="">Selecione seu nome...</option>
-                                    {users.map(u => (
-                                        <option key={u.id} value={u.id}>{u.name}</option>
-                                    ))}
-                                </select>
+                                    options={users}
+                                    placeholder="Selecione seu nome..."
+                                    className="mb-3"
+                                />
                              ) : (
                                  <p className="text-sm text-yellow-500 mb-3 bg-yellow-900/20 p-2 rounded border border-yellow-900/50">
                                      Ainda não há ninguém no grupo. Use a opção abaixo para entrar.

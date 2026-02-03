@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { getUserColor } from '../lib/colors'
+import CustomSelect from './CustomSelect'
 
 interface User {
   id: string
@@ -233,19 +234,12 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
             {isAdmin && (
               <div>
                    <label className="block text-sm font-medium text-slate-400 mb-1">Pago Por</label>
-                  <div className="relative">
-                      {/* If admin, show full select. If not, show read-only or disabled select enforcing current user */}
-                      <select
-                          value={paidBy}
-                          onChange={(e) => setPaidBy(e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-white font-sans"
-                      >
-                          <option value="">Quem pagou?</option>
-                          {users.map(user => (
-                              <option key={user.id} value={user.id}>{user.name}</option>
-                          ))}
-                      </select>
-                  </div>
+                   <CustomSelect
+                       value={paidBy}
+                       onChange={(val) => setPaidBy(val)}
+                       options={users}
+                       placeholder="Quem pagou?"
+                   />
               </div>
             )}
 
@@ -302,17 +296,13 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
                   
                   return isDirectPayment ? (
                      <div title={isSplitDisabled ? "Adicione mais pessoas ao grupo." : ""}>
-                         <select
-                            value={participants[0] || ''}
-                            onChange={(e) => setParticipants([e.target.value])}
-                            disabled={isSplitDisabled}
-                            className={`w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-white font-sans ${isSplitDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                         >
-                            <option value="">{isSplitDisabled ? "Sem ninguém para pagar" : "Selecione o beneficiário"}</option>
-                            {availableParticipants.map(user => (
-                                <option key={user.id} value={user.id}>{user.name}</option>
-                            ))}
-                         </select>
+                         <CustomSelect
+                             value={participants[0] || ''}
+                             onChange={(val) => setParticipants([val])}
+                             options={availableParticipants}
+                             placeholder={isSplitDisabled ? "Sem ninguém para pagar" : "Selecione o beneficiário"}
+                             disabled={isSplitDisabled}
+                         />
                      </div>
                   ) : (
                     <div title={isSplitDisabled ? "Adicione mais pessoas ao grupo." : ""}>
