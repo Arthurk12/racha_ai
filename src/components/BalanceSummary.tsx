@@ -1,8 +1,10 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useTransition } from 'react'
 import { calculateBalances, calculatePairwiseDebts, getDebtBreakdown } from '@/lib/balance'
 import { getUserColor } from '@/lib/colors'
+import { settleDebt } from '@/app/actions'
+import { useParams } from 'next/navigation'
 
 interface User {
   id: string
@@ -16,17 +18,34 @@ interface Expense {
   paidBy: string
   participants: string[]
   date?: string | Date
+  isSettlement?: boolean
 }
 
 interface BalanceSummaryProps {
   users: User[]
   expenses: Expense[]
+  currentUserId: string | null
 }
 
-export default function BalanceSummary({ users, expenses }: BalanceSummaryProps) {
+export default function BalanceSummary({ users, expenses, currentUserId }: BalanceSummaryProps) {
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null)
   const [expandedSuggestionIndex, setExpandedSuggestionIndex] = useState<number | null>(null)
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [isPending, startTransition] = useTransition()
+  const params = useParams()
+  const groupId = params.id as string
+
+  const handleSettle = (debtorId: string, creditorId: string, amount: number) => {
+      /* 
+         Allow settlement if I'm the debtor (paying) OR creditor (confirming receipt).
+         The action logic will always create expense as PaidBy: Debtor, Participant: Creditor.
+      */
+      if (confirm(`Confirmar o pagamento de ${amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}?`)) {
+          startTransition(async () => {
+              await settleDebt(groupId, debtorId, creditorId, amount)
+          })
+      }
+  }
 
   const balances = useMemo(() => {
     return calculateBalances(users, expenses)
@@ -62,6 +81,7 @@ export default function BalanceSummary({ users, expenses }: BalanceSummaryProps)
         return {
           debtor,
           creditor,
+          amountValue: d.amount, // Pass raw amount
           amount: d.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
         }
       })
@@ -168,6 +188,23 @@ export default function BalanceSummary({ users, expenses }: BalanceSummaryProps)
 
                         {isExpanded && (
                             <div className="bg-slate-800/50 p-3 border-t border-slate-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                            
+                            {/* Settlement Button */}
+                            {currentUserId && (currentUserId === sugg.debtor.id || currentUserId === sugg.creditor.id) && (
+                                <div className="mb-4 bg-slate-700/50 p-3 rounded border border-slate-600 flex flex-col items-center justify-center gap-2">
+                                    <p className="text-sm text-slate-300">
+                                        {currentUserId === sugg.debtor.id ? 'Já pagou essa dívida?' : 'Já recebeu esse valor?'}
+                                    </p>
+                                    <button 
+                                        onClick={() => handleSettle(sugg.debtor.id, sugg.creditor.id, sugg.amountValue)}
+                                        disabled={isPending}
+                                        className="bg-green-600 hover:bg-green-500 text-white font-bold py-1 px-4 rounded text-sm w-full md:w-auto shadow-sm transition-colors disabled:opacity-50"
+                                    >
+                                        {isPending ? 'Processando...' : 'Marcar como Quitado (Criar despesa de reembolso)'}
+                                    </button>
+                                </div>
+                            )}
+
                             <p className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">Origem do Saldo</p>
                             {breakdown.length === 0 ? (
                                 <p className="text-xs text-slate-500 italic">Nenhum registro detalhado encontrado.</p>

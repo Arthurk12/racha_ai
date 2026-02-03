@@ -30,13 +30,15 @@ export default async function GroupPage({ params }: { params: { id: string } }) 
     amount: exp.amount,
     paidBy: exp.paidById,
     date: exp.date ? exp.date.toISOString() : new Date().toISOString(),
-    participants: exp.participants.map((p: any) => p.userId)
+    participants: exp.participants.map((p: any) => p.userId),
+    isSettlement: exp.isSettlement
   }))
   
   const users = group.users.map((u: any) => ({
     id: u.id,
     name: u.name,
-    isAdmin: u.isAdmin
+    isAdmin: u.isAdmin,
+    hasFinishedAdding: u.hasFinishedAdding
   }))
 
   return (

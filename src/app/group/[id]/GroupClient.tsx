@@ -15,6 +15,7 @@ interface User {
   id: string
   name: string
   isAdmin: boolean
+  hasFinishedAdding: boolean
 }
 
 interface Expense {
@@ -24,6 +25,7 @@ interface Expense {
   paidBy: string
   date: string
   participants: string[]
+  isSettlement?: boolean
 }
 
 interface GroupClientProps {
@@ -82,6 +84,8 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
 
   const currentUser = users.find(u => u.id === currentUserId)
   const isCurrentUserAdmin = currentUser?.isAdmin || false
+
+  const allFinished = users.length > 1 && users.every(u => u.hasFinishedAdding)
 
   const handleJoin = async () => {
     setAuthError('')
@@ -435,10 +439,21 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
         </div>
         )}
 
+        {/* Banner de Todos Finalizados */}
+        {allFinished && (
+            <div className="bg-gradient-to-r from-green-900/40 to-emerald-900/40 border border-green-500/50 p-4 rounded-lg mb-8 text-center animate-in zoom-in duration-300 shadow-lg shadow-green-900/20">
+                <p className="text-green-300 font-bold text-lg flex items-center justify-center gap-2">
+                    <span>🎉</span> Grupo Fechado!
+                </p>
+                <p className="text-green-400/80 text-sm">Todos os participantes marcaram que finalizaram seus lançamentos.</p>
+                <p className="text-xs text-green-500/60 mt-1">Os saldos abaixo são finais. Podem prosseguir com os pagamentos.</p>
+            </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="contents md:flex md:flex-col md:gap-6">
             <div className="order-1">
-              <BalanceSummary users={users} expenses={expenses} />
+              <BalanceSummary users={users} expenses={expenses} currentUserId={currentUserId} />
             </div>
             
             <div className="order-3">

@@ -14,6 +14,7 @@ interface Expense {
   paidBy: string
   date: string
   participants: string[]
+  isSettlement?: boolean
 }
 
 interface ExpenseHistoryProps {
@@ -27,7 +28,9 @@ interface ExpenseHistoryProps {
 
 import { getUserColor } from '@/lib/colors'
 
-const getCategoryIcon = (description: string) => {
+const getCategoryIcon = (description: string, isSettlement?: boolean) => {
+  if (isSettlement) return '💸'
+
   // Normalize: lowercase and remove accents (e.g., 'á' -> 'a', 'ç' -> 'c')
   const normalized = description
     .toLowerCase()
@@ -155,25 +158,27 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
             const isMyExpense = currentUserId === expense.paidBy;
             const canEdit = isAdmin || isMyExpense;
             const isEditing = editingId === expense.id;
-            const categoryIcon = getCategoryIcon(expense.description);
+            const categoryIcon = getCategoryIcon(expense.description, expense.isSettlement);
             const userColor = getUserColor(expense.paidBy);
 
             return (
                 <li 
                 key={expense.id} 
                 className={`flex justify-between items-start p-3 rounded-lg border transition-all hover:bg-slate-700/50 w-full ${
-                    isMyExpense 
-                    ? 'bg-green-900/10 border-green-500/30' 
-                    : 'bg-slate-800 border-slate-700'
+                    expense.isSettlement
+                    ? 'bg-green-900/20 border-green-500/50 mr-4 border-2 border-dotted flex-row-reverse'
+                    : isMyExpense 
+                        ? 'bg-green-900/10 border-green-500/30 border-l-4 border-l-green-500' 
+                        : 'bg-slate-800 border-slate-700'
                 }`}
                 >
-                <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <div className="w-10 h-10 flex items-center justify-center bg-slate-700 rounded-full text-2xl flex-shrink-0 border border-slate-600 shadow-sm mt-1">
+                <div className={`flex items-start gap-3 flex-1 min-w-0 ${expense.isSettlement ? 'flex-row-reverse text-right' : ''}`}>
+                    <div className={`w-10 h-10 flex items-center justify-center rounded-full text-2xl flex-shrink-0 border shadow-sm mt-1 ${expense.isSettlement ? 'bg-green-900 border-green-500 text-green-200' : 'bg-slate-700 border-slate-600'}`}>
                         {categoryIcon}
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-start gap-2">
+                        <div className={`flex justify-between items-start gap-2 ${expense.isSettlement ? 'flex-row-reverse' : ''}`}>
                             {isEditing ? (
                                 <input 
                                     type="text"
@@ -184,8 +189,8 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
                                     placeholder="Descrição"
                                 />
                             ) : (
-                                <p className="font-semibold text-slate-100 truncate capitalize flex-1 min-w-0 mr-1" title={expense.description}>
-                                    {expense.description}
+                                <p className={`font-semibold  truncate capitalize flex-1 min-w-0 mr-1 ${expense.isSettlement ? 'text-green-300 italic' : 'text-slate-100'}`} title={expense.description}>
+                                    {expense.isSettlement ? 'Pagamento realizado' : expense.description}
                                 </p>
                             )}
                             {isEditing ? (
@@ -202,7 +207,7 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
                             )}
                         </div>
                         
-                        <div className="flex items-center gap-2 mt-1 flex-wrap overflow-hidden">
+                        <div className={`mt-1 overflow-hidden ${expense.isSettlement ? 'flex flex-col gap-0.5 items-end' : 'flex items-center gap-2 flex-wrap'}`}>
                              {isEditing ? (
                                 <div className="relative w-28">
                                     <input
@@ -230,12 +235,22 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
                                     {expense.date ? new Date(expense.date).toLocaleDateString('pt-BR') : 'Data n/a'}
                                 </span>
                              )}
-                             <span className="text-xs text-slate-400 truncate flex-1 min-w-0">
-                                Pago por <span className={`font-bold ${userColor}`}>{users.find(u => u.id === expense.paidBy)?.name || 'Desconhecido'}</span>
-                             </span>
+
+                             {/* Is Settlement Logic vs Normal Expense Logic */}
+                             {expense.isSettlement ? (
+                                 <span className="text-xs text-slate-300 truncate flex-1 min-w-0 flex items-center gap-1 justify-end">
+                                    <span className={`font-bold ${getUserColor(expense.paidBy)}`}>{users.find(u => u.id === expense.paidBy)?.name || 'Desconhecido'}</span>
+                                    <span>pagou para</span>
+                                    <span className={`font-bold ${getUserColor(expense.participants[0])}`}>{users.find(u => u.id === expense.participants[0])?.name || 'Desconhecido'}</span>
+                                 </span>
+                             ) : (
+                                <span className="text-xs text-slate-400 truncate flex-1 min-w-0">
+                                    Pago por <span className={`font-bold ${userColor}`}>{users.find(u => u.id === expense.paidBy)?.name || 'Desconhecido'}</span>
+                                </span>
+                             )}
                         </div>
                         
-                                <div className="text-xs text-slate-500 mt-1 min-h-[24px]">
+                        <div className="text-xs text-slate-500 mt-1 min-h-[24px]">
                            {isEditing ? (
                               <div className="w-full mt-2">
                                 <button
@@ -266,23 +281,27 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
                               </div>
                            ) : (
                                <>
-                               Participantes: {expense.participants.map((id, idx) => {
-                                   const u = users.find(user => user.id === id);
-                                   if (!u) return null;
-                                   return (
-                                     <span key={id}>
-                                       {idx > 0 && ', '}
-                                       <span className={getUserColor(id)}>{u.name}</span>
-                                     </span>
-                                   )
-                               })}
+                               {!expense.isSettlement && (
+                                   <>
+                                   Participantes: {expense.participants.map((id, idx) => {
+                                       const u = users.find(user => user.id === id);
+                                       if (!u) return null;
+                                       return (
+                                         <span key={id}>
+                                           {idx > 0 && ', '}
+                                           <span className={getUserColor(id)}>{u.name}</span>
+                                         </span>
+                                       )
+                                   })}
+                                   </>
+                               )}
                                </>
                            )}
                         </div>
                     </div>
                 </div>
 
-                <div className="flex flex-col gap-1 ml-2">
+                <div className={`flex flex-col gap-1 ${expense.isSettlement ? 'mr-2' : 'ml-2'}`}>
                     {canEdit && (
                         isEditing ? (
                             <>

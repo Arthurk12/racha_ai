@@ -220,3 +220,40 @@ export async function updateExpense(groupId: string, expenseId: string, formData
     revalidatePath(`/group/${groupId}`)
     return { success: true }
 }
+
+// --- Novas Features ---
+
+export async function toggleUserFinishedState(groupId: string, userId: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId }})
+    if (!user) return
+
+    await prisma.user.update({
+        where: { id: userId },
+        data: { hasFinishedAdding: !user.hasFinishedAdding }
+    })
+    revalidatePath(`/group/${groupId}`)
+}
+
+export async function settleDebt(groupId: string, debtorId: string, creditorId: string, amount: number) {
+    const debtor = await prisma.user.findUnique({ where: { id: debtorId }})
+    const creditor = await prisma.user.findUnique({ where: { id: creditorId }})
+
+    if (!debtor || !creditor) return
+
+    await prisma.expense.create({
+        data: {
+            description: "Reembolso / Pagamento",
+            amount: amount,
+            paidById: debtorId, // Devedor paga
+            groupId: groupId,
+            date: new Date(),
+            isSettlement: true, // Marca como pagamento
+            participants: {
+                create: [
+                    { userId: creditorId } // Creditor é o beneficiário
+                ]
+            }
+        }
+    })
+    revalidatePath(`/group/${groupId}`)
+}

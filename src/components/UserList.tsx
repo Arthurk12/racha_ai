@@ -1,12 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { startTransition, useState } from 'react'
 import { getUserColor } from '@/lib/colors'
+import { toggleUserFinishedState } from '@/app/actions'
+import { useParams } from 'next/navigation'
 
 interface User {
   id: string
   name: string
   isAdmin: boolean
+  hasFinishedAdding: boolean
 }
 
 interface UserListProps {
@@ -19,6 +22,15 @@ interface UserListProps {
 
 export default function UserList({ users, removeUser, isAdmin, onResetPin, currentUserId }: UserListProps) {
   const [linkCopied, setLinkCopied] = useState(false)
+  const params = useParams()
+  const groupId = params.id as string
+
+  const handleToggleFinished = () => {
+    if (!currentUserId) return
+    startTransition(() => {
+        toggleUserFinishedState(groupId, currentUserId)
+    })
+  }
 
   return (
     <div className="bg-slate-800 p-6 rounded-lg shadow-xl border border-slate-700 mb-6">
@@ -33,13 +45,31 @@ export default function UserList({ users, removeUser, isAdmin, onResetPin, curre
         {users.map((user) => (
           <li key={user.id} className="flex justify-between items-center p-2 bg-slate-700 rounded border border-slate-600">
             <div className="flex items-center gap-2">
-              <span className={`font-bold ${getUserColor(user.id)}`}>
-                {user.name} {user.id === currentUserId && <span className="text-slate-400 font-normal text-xs">(você)</span>}
-              </span>
+                <div className="flex flex-col">
+                    <span className={`font-bold flex items-center gap-2 ${getUserColor(user.id)}`}>
+                        {user.name} 
+                        {user.id === currentUserId && <span className="text-slate-400 font-normal text-xs">(você)</span>}
+                        {user.hasFinishedAdding && (
+                            <span className="text-[10px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded border border-green-500/30 font-semibold flex items-center gap-1" title="Finalizou os lançamentos">
+                                ✓ <span className="hidden sm:inline">Pronto</span>
+                            </span>
+                        )}
+                    </span>
+                </div>
                {user.isAdmin && <span className="text-[10px] bg-green-900 text-green-200 px-1 py-0.5 rounded uppercase tracking-wider">Admin</span>}
             </div>
             
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
+               {currentUserId === user.id && (
+                  <button
+                    onClick={handleToggleFinished}
+                    className={`text-[10px] uppercase font-bold px-2 py-1 rounded border transition-colors ${user.hasFinishedAdding ? 'bg-green-600 text-white border-green-500 hover:bg-green-500' : 'bg-slate-800 text-slate-400 border-slate-600 hover:bg-slate-700 hover:text-white'}`}
+                    title={user.hasFinishedAdding ? "Clique para reabrir lançamentos" : "Clique para marcar que finalizou"}
+                  >
+                      {user.hasFinishedAdding ? 'Reabrir' : 'Finalizar?'}
+                  </button>
+               )}
+
                {isAdmin && !user.isAdmin && (
                 <div className="relative group/tooltip">
                   <button

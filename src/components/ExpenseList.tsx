@@ -16,6 +16,7 @@ interface Expense {
   paidBy: string
   date: string
   participants: string[]
+  isSettlement?: boolean
 }
 
 interface ExpenseListProps {
