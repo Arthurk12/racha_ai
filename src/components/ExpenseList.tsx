@@ -160,21 +160,26 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Ex: Mercado, Uber..."
             className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-white placeholder-slate-500"
+            onKeyPress={(e) => e.key === 'Enter' && handleAddExpense()}
           />
         </div>
         
         <div>
           <label className="block text-sm font-medium text-slate-400 mb-1">Valor</label>
-          <input
-            type="text"
-            value={amount}
-            onChange={(e) => {
-              const value = e.target.value.replace(/[^0-9,]/g, '')
-              setAmount(value)
-            }}
-            placeholder="0,00"
-            className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-white placeholder-slate-500"
-          />
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">R$</span>
+            <input
+              type="text"
+              value={amount}
+              onChange={(e) => {
+                const value = e.target.value.replace(/[^0-9,]/g, '')
+                setAmount(value)
+              }}
+              placeholder="0,00"
+              className="w-full pl-10 pr-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-white placeholder-slate-500"
+              onKeyPress={(e) => e.key === 'Enter' && handleAddExpense()}
+            />
+          </div>
         </div>
 
         <div>
@@ -187,6 +192,7 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
               placeholder="DD/MM/AAAA"
               value={date}
               onChange={handleDateChange}
+              onKeyPress={(e) => e.key === 'Enter' && handleAddExpense()}
               className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-white placeholder-slate-500"
               />
               <div className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -355,7 +361,7 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
         <button
           onClick={handleAddExpense}
           disabled={isPending}
-          className={`w-full px-4 py-2 bg-green-500 text-slate-900 rounded-md hover:bg-green-400 focus:outline-none focus:ring-2 focus:ring-green-400 font-bold shadow flex items-center justify-center ${isPending ? 'opacity-75 cursor-not-allowed' : ''}`}
+          className={`w-full md:py-2 py-3 px-4 bg-green-500 text-slate-900 rounded-md hover:bg-green-400 focus:outline-none focus:ring-2 focus:ring-green-400 font-bold shadow flex items-center justify-center text-lg md:text-base ${isPending ? 'opacity-75 cursor-not-allowed' : ''}`}
         >
           {isPending ? (
             <>
@@ -375,7 +381,7 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
                 </p>
                 <button
                     onClick={() => onToggleFinished(currentUserId)}
-                    className="w-full px-4 py-2 bg-transparent border border-green-500/50 text-green-400 rounded hover:bg-green-500/10 transition-colors text-sm flex items-center justify-center gap-2 font-medium"
+                    className="w-full md:py-2 py-3 px-4 bg-transparent border border-green-500/50 text-green-400 rounded hover:bg-green-500/10 transition-colors text-sm flex items-center justify-center gap-2 font-medium"
                 >
                     MARCAR COMO FINALIZADO
                 </button>

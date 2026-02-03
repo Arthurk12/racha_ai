@@ -156,15 +156,21 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
   }
 
   const handleRemoveUser = (userId: string) => {
-    if (userId === currentUserId) {
-      localStorage.removeItem(`racha_ai_user_${groupId}`)
-      setCurrentUserId(null)
-      setShowAuthModal(true)
-      router.push('/')
-    }
+    const isRemovingSelf = userId === currentUserId
+    const message = isRemovingSelf 
+        ? 'Tem certeza que deseja sair do grupo? Isso removerá seu usuário e todos os registros associados.' 
+        : 'Tem certeza que deseja remover este participante?'
+
     // Pass currentUserId as the requester
     if (currentUserId) {
-        requestConfirm('Tem certeza que deseja remover este participante?', () => {
+        requestConfirm(message, () => {
+             if (isRemovingSelf) {
+                localStorage.removeItem(`racha_ai_user_${groupId}`)
+                setCurrentUserId(null)
+                setShowAuthModal(true)
+                router.push('/')
+             }
+             
              setPendingId(`remove-user-${userId}`)
              startTransition(async () => {
                 await removeUser(groupId, userId, currentUserId)
@@ -373,12 +379,13 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
                     {authMode === 'new' && (
                         <div className="px-4 pb-4 animate-in slide-in-from-top-2 duration-200">
                             <p className="text-xs text-slate-400 mb-2">Crie seu perfil e defina um PIN de acesso.</p>
-                            <input
+                   <input
                                 type="text"
                                 placeholder="Seu Nome"
                                 value={authName}
                                 onChange={(e) => setAuthName(e.target.value)}
                                 className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded mb-3 text-white outline-none focus:ring-1 focus:ring-green-400 placeholder-slate-600"
+                                onKeyPress={(e) => e.key === 'Enter' && handleJoin()}
                             />
                              <input
                                 type="password"
@@ -434,8 +441,8 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
 
       {/* Pin Change Modal */}
       {showPinModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-            <div className="bg-slate-800 p-6 rounded-lg shadow-xl max-w-sm w-full border border-slate-700">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 animate-in fade-in duration-200">
+            <div className="bg-slate-800 p-6 rounded-xl shadow-2xl max-w-sm w-full border border-slate-600 animate-in zoom-in-95 duration-200">
                 <h3 className="text-xl font-bold mb-4 text-white">Trocar meu PIN</h3>
                 <input
                     type="password"
@@ -443,11 +450,23 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
                     placeholder="Novo PIN (4 dígitos)"
                     value={newPin}
                     onChange={(e) => setNewPin(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white mb-4 text-center text-xl tracking-widest"
+                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white mb-4 text-center text-xl tracking-widest outline-none focus:ring-2 focus:ring-green-400"
+                    onKeyPress={(e) => e.key === 'Enter' && handleChangePin()}
                 />
-                <div className="flex gap-2">
-                    <button onClick={() => setShowPinModal(false)} className="flex-1 bg-slate-600 text-white py-2 rounded">Cancelar</button>
-                    <button onClick={handleChangePin} className="flex-1 bg-green-600 text-white py-2 rounded disabled:opacity-50" disabled={newPin.length < 4}>Salvar</button>
+                <div className="flex gap-3">
+                    <button 
+                        onClick={() => setShowPinModal(false)} 
+                        className="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-2 rounded transition-colors"
+                    >
+                        Cancelar
+                    </button>
+                    <button 
+                        onClick={handleChangePin} 
+                        className="flex-1 bg-green-600 hover:bg-green-500 text-white py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-bold" 
+                        disabled={newPin.length < 4}
+                    >
+                        Salvar
+                    </button>
                 </div>
             </div>
         </div>
@@ -468,9 +487,9 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
                     <button
                         onClick={() => {
                             navigator.clipboard.writeText(window.location.href.split('?')[0])
-                            alert('Link copiado!')
+                            showToast('Link copiado!', 'success')
                         }}
-                        className="text-sm bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 rounded border border-slate-600 transition-colors flex items-center gap-1"
+                        className="text-sm bg-slate-800 hover:bg-slate-700 text-white md:px-3 md:py-1 px-4 py-2 rounded border border-slate-600 transition-colors flex items-center gap-1"
                         title="Copiar Link de Convite"
                     >
                         🔗 <span className="hidden sm:inline">Copiar Link</span>
@@ -478,7 +497,7 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
                  )}
                  <button
                     onClick={() => setShowPinModal(true)}
-                    className="text-sm bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 rounded border border-slate-600 transition-colors"
+                    className="text-sm bg-slate-800 hover:bg-slate-700 text-white md:px-3 md:py-1 px-4 py-2 rounded border border-slate-600 transition-colors"
                  >
                     🔑 <span className="hidden sm:inline">Alterar PIN</span>
                  </button>
@@ -489,7 +508,7 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
                     // setShowAuthModal(true) // Removed to redirect instead
                     router.push('/')
                 }}
-                className="text-sm text-red-400 hover:text-red-300 hover:underline ml-2"
+                className="text-sm text-red-400 hover:text-red-300 hover:underline ml-2 md:p-1 p-2"
                 >
                 Sair
                 </button>
@@ -682,6 +701,7 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
                             confirmConfig.onConfirm()
                             setConfirmConfig(null)
                         }}
+                        autoFocus
                         className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-500 text-white font-bold rounded transition-colors"
                     >
                         Confirmar

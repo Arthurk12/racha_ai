@@ -183,14 +183,14 @@ export default function BalanceSummary({ users, expenses, currentUserId, onConfi
                     return (
                     <li key={index} className="bg-slate-700 text-slate-200 rounded border border-slate-600 flex flex-col">
                         <div 
-                            className="p-3 flex items-center gap-2 cursor-pointer hover:bg-slate-600/50 transition-colors overflow-hidden"
+                            className="p-3 flex flex-wrap items-center gap-2 cursor-pointer hover:bg-slate-600/50 transition-colors"
                             onClick={() => setExpandedSuggestionIndex(isExpanded ? null : index)}
                         >
-                            <span className={`font-bold truncate min-w-[60px] ${getUserColor(sugg.debtor.id)}`} title={sugg.debtor.name}>{sugg.debtor.name}</span>
-                            <span className="whitespace-nowrap shrink-0 text-sm">paga</span>
-                            <span className="font-mono font-bold text-white bg-slate-800 px-1 rounded whitespace-nowrap shrink-0 text-sm">{sugg.amount}</span>
-                            <span className="whitespace-nowrap shrink-0 text-sm">a</span>
-                            <span className={`font-bold truncate min-w-[60px] ${getUserColor(sugg.creditor.id)}`} title={sugg.creditor.name}>{sugg.creditor.name}</span>
+                            <span className={`font-bold truncate max-w-[100px] ${getUserColor(sugg.debtor.id)}`} title={sugg.debtor.name}>{sugg.debtor.name}</span>
+                            <span className="whitespace-nowrap shrink-0 text-sm opacity-80">paga</span>
+                            <span className="font-mono font-bold text-white bg-slate-800 px-2 py-0.5 rounded whitespace-nowrap shrink-0 text-sm">{sugg.amount}</span>
+                            <span className="whitespace-nowrap shrink-0 text-sm opacity-80">a</span>
+                            <span className={`font-bold truncate max-w-[100px] ${getUserColor(sugg.creditor.id)}`} title={sugg.creditor.name}>{sugg.creditor.name}</span>
                             <span className="text-xs text-slate-400 whitespace-nowrap shrink-0 pl-1 ml-auto">{isExpanded ? '▲' : '▼'}</span>
                         </div>
 
@@ -236,7 +236,7 @@ export default function BalanceSummary({ users, expenses, currentUserId, onConfi
                                         const textColor = isDebtorPaying ? 'text-green-400' : 'text-red-400'
 
                                         return (
-                                        <li key={idx} className="flex justify-between items-start border-b border-slate-700/50 pb-1 last:border-0 pl-2 border-l-2" style={{borderLeftColor: isDebtorPaying ? '#4ade80' : '#f87171'}}>
+                                        <li key={idx} className="flex justify-between items-start border-b border-slate-700/50 pb-1 last:border-b-0 pl-2 border-l-4 border-solid" style={{borderLeftColor: isDebtorPaying ? '#4ade80' : '#f87171'}}>
                                             <div className="flex flex-col">
                                                 <span className="text-slate-300 font-medium">{item.description}</span>
                                                 <span className="text-[10px] text-slate-500">

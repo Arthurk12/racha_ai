@@ -192,6 +192,7 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
                                     className="flex-1 min-w-0 px-2 py-1 text-sm bg-slate-900 border border-slate-600 rounded text-white focus:ring-1 focus:ring-green-400 outline-none mr-2"
                                     autoFocus
                                     placeholder="Descrição"
+                                    onKeyPress={(e) => e.key === 'Enter' && saveEditing(expense.id)}
                                 />
                             ) : (
                                 <p className={`font-semibold  truncate capitalize flex-1 min-w-0 mr-1 ${expense.isSettlement ? 'text-green-300 italic' : 'text-slate-100'}`} title={expense.description}>
@@ -204,6 +205,7 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
                                     value={editAmount}
                                     onChange={(e) => setEditAmount(e.target.value.replace(/[^0-9,]/g, ''))}
                                     className="w-24 px-2 py-1 text-sm bg-slate-900 border border-slate-600 rounded text-white focus:ring-1 focus:ring-green-400 outline-none text-right"
+                                    onKeyPress={(e) => e.key === 'Enter' && saveEditing(expense.id)}
                                 />
                             ) : (
                                 <span className="text-green-400 font-bold whitespace-nowrap flex-shrink-0">
@@ -220,6 +222,7 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
                                         value={editDate}
                                         onChange={handleEditDateChange}
                                         maxLength={10}
+                                        onKeyPress={(e) => e.key === 'Enter' && saveEditing(expense.id)}
                                         className="w-full pl-2 pr-6 py-0.5 text-[10px] bg-slate-900 border border-slate-600 rounded-full text-white focus:ring-1 focus:ring-green-400 outline-none"
                                     />
                                      <div className="absolute right-1 top-1/2 -translate-y-1/2">
@@ -315,7 +318,7 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
                                 <button
                                     onClick={() => saveEditing(expense.id)}
                                     disabled={pendingId === `update-expense-${expense.id}`}
-                                    className="text-green-500 hover:text-green-400 p-1 transition-colors rounded hover:bg-slate-700/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="text-green-500 hover:text-green-400 p-2 transition-colors rounded hover:bg-slate-700/80 disabled:opacity-50 disabled:cursor-not-allowed"
                                     title="Salvar"
                                 >
                                     {pendingId === `update-expense-${expense.id}` ? (
@@ -332,7 +335,7 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
                                 <button
                                     onClick={cancelEditing}
                                     disabled={pendingId === `update-expense-${expense.id}`}
-                                    className="text-slate-400 hover:text-slate-300 p-1 transition-colors rounded hover:bg-slate-700/80 disabled:opacity-30 disabled:cursor-not-allowed"
+                                    className="text-slate-400 hover:text-slate-300 p-2 transition-colors rounded hover:bg-slate-700/80 disabled:opacity-30 disabled:cursor-not-allowed"
                                     title="Cancelar"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -344,7 +347,7 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
                             <>
                                 <button
                                     onClick={() => startEditing(expense)}
-                                    className="text-slate-500 hover:text-blue-400 p-1 transition-colors rounded hover:bg-slate-700/80"
+                                    className="text-slate-500 hover:text-blue-400 p-2 transition-colors rounded hover:bg-slate-700/80"
                                     title="Editar"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -354,7 +357,7 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
                                 <button
                                     onClick={() => removeExpense(expense.id)}
                                     disabled={pendingId === `remove-expense-${expense.id}`}
-                                    className="text-slate-500 hover:text-red-400 p-1 transition-colors rounded hover:bg-slate-700/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="text-slate-500 hover:text-red-400 p-2 transition-colors rounded hover:bg-slate-700/80 disabled:opacity-50 disabled:cursor-not-allowed"
                                     title="Remover Despesa"
                                 >
                                     {pendingId === `remove-expense-${expense.id}` ? (

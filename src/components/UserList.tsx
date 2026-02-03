@@ -76,13 +76,13 @@ export default function UserList({ users, removeUser, isAdmin, onResetPin, onTog
                {user.isAdmin && <span className="text-[10px] bg-green-900 text-green-200 px-1 py-0.5 rounded uppercase tracking-wider">Admin</span>}
             </div>
             
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-4 items-center">
                {currentUserId === user.id && (
                   <div className="relative group/finish flex items-center">
                       <button
                         onClick={handleToggleFinishedLocal}
                         disabled={pendingId === `toggle-finished-${user.id}`}
-                        className={`text-[10px] uppercase font-bold px-2 py-1 rounded border transition-colors flex items-center gap-1 ${user.hasFinishedAdding ? 'bg-green-600 text-white border-green-500 hover:bg-green-500' : 'bg-slate-800 text-slate-400 border-slate-600 hover:bg-slate-700 hover:text-white'} ${pendingId === `toggle-finished-${user.id}` ? 'opacity-70 cursor-not-allowed' : ''}`}
+                        className={`text-xs uppercase font-bold p-2 md:px-2 md:py-1 rounded border transition-colors flex items-center gap-1 ${user.hasFinishedAdding ? 'bg-green-600 text-white border-green-500 hover:bg-green-500' : 'bg-slate-800 text-slate-400 border-slate-600 hover:bg-slate-700 hover:text-white'} ${pendingId === `toggle-finished-${user.id}` ? 'opacity-70 cursor-not-allowed' : ''}`}
                       >
                           {pendingId === `toggle-finished-${user.id}` && (
                             <svg className="animate-spin h-3 w-3 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -110,7 +110,7 @@ export default function UserList({ users, removeUser, isAdmin, onResetPin, onTog
                   <button
                     onClick={() => onResetPin(user.id)}
                     disabled={pendingId === `reset-pin-${user.id}`}
-                    className="text-amber-500 hover:text-amber-400 text-xs mr-2 border border-amber-500/30 px-2 py-0.5 rounded hover:bg-amber-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                    className="text-amber-500 hover:text-amber-400 text-xs border border-amber-500/30 px-2 py-0.5 rounded hover:bg-amber-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                   >
                     {pendingId === `reset-pin-${user.id}` ? (
                         <svg className="animate-spin h-3 w-3 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
