@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import GroupClient from './GroupClient'
 import { notFound } from 'next/navigation'
+import bcrypt from 'bcryptjs'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,12 +37,21 @@ export default async function GroupPage({ params }: { params: { id: string } }) 
     isSettlement: exp.isSettlement
   }))
   
-  const users = group.users.map((u: any) => ({
-    id: u.id,
-    name: u.name,
-    isAdmin: u.isAdmin,
-    hasFinishedAdding: u.hasFinishedAdding,
-    isDefaultPin: u.pin === '0000'
+  // Verifica PIN padrão (compatível com plain text e hash)
+  const users = await Promise.all(group.users.map(async (u: any) => {
+    let isDefault = u.pin === '0000' // Check legacy plain text
+    if (!isDefault) {
+        // Check hash
+        isDefault = await bcrypt.compare('0000', u.pin).catch(() => false)
+    }
+    
+    return {
+        id: u.id,
+        name: u.name,
+        isAdmin: u.isAdmin,
+        hasFinishedAdding: u.hasFinishedAdding,
+        isDefaultPin: isDefault
+    }
   }))
 
   return (

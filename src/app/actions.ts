@@ -2,9 +2,12 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import bcrypt from 'bcryptjs'
 
 export async function createGroup(groupName: string, adminName: string, adminPin: string) {
   if (!groupName || !adminName || !adminPin) return null
+
+  const hashedPin = await bcrypt.hash(adminPin, 10)
 
   try {
     const group = await prisma.group.create({
@@ -13,7 +16,7 @@ export async function createGroup(groupName: string, adminName: string, adminPin
         users: {
           create: {
             name: adminName,
-            pin: adminPin,
+            pin: hashedPin,
             isAdmin: true
           }
         }
@@ -48,10 +51,12 @@ export async function addUser(groupId: string, formData: FormData) {
     return { error: 'Já existe alguém com esse nome no grupo.' }
   }
 
+  const hashedPin = await bcrypt.hash(pin, 10)
+
   const user = await prisma.user.create({
     data: {
       name,
-      pin,
+      pin: hashedPin,
       groupId
     }
   })
@@ -67,9 +72,11 @@ export async function resetUserPin(groupId: string, targetUserId: string, adminU
       return { error: 'Apenas administradores podem resetar senhas.' }
   }
 
+  const hashedPin = await bcrypt.hash('0000', 10)
+
   await prisma.user.update({
     where: { id: targetUserId },
-    data: { pin: '0000' } // Resets to default
+    data: { pin: hashedPin } // Resets to default
   })
 
   revalidatePath(`/group/${groupId}`)
@@ -79,9 +86,11 @@ export async function resetUserPin(groupId: string, targetUserId: string, adminU
 export async function updateUserPin(groupId: string, userId: string, newPin: string) {
   if (!newPin || newPin.length < 4) return { error: 'PIN inválido' }
 
+  const hashedPin = await bcrypt.hash(newPin, 10)
+
   await prisma.user.update({
     where: { id: userId },
-    data: { pin: newPin }
+    data: { pin: hashedPin }
   })
   
   revalidatePath(`/group/${groupId}`)
@@ -126,9 +135,23 @@ export async function verifyUser(userId: string, pin: string) {
     where: { id: userId }
   })
 
-  if (user && user.pin === pin) {
-    return true
+  if (!user) return false
+
+  // 1. Tentar comparar como hash bcrypt
+  const isValidBcrypt = await bcrypt.compare(pin, user.pin).catch(() => false)
+  if (isValidBcrypt) return true
+
+  // 2. Fallback: comparar como texto plano (para usuários antigos)
+  if (user.pin === pin) {
+      // Migração automática transparente: atualiza para hash
+      const hashedPin = await bcrypt.hash(pin, 10)
+      await prisma.user.update({
+          where: { id: userId },
+          data: { pin: hashedPin }
+      })
+      return true
   }
+
   return false
 }
 
