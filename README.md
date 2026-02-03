@@ -1,6 +1,6 @@
 # Racha AI - Divisão de Contas Simplificada
 
-![Racha AI Overview](https://placehold.co/800x300/1e293b/4ade80?text=Racha+AI+Dashboard&font=roboto)
+![Racha AI Banner](public/banner.svg)
 
 Aplicação web fullstack para divisão de despesas entre amigos, focada em simplicidade e privacidade.
 
