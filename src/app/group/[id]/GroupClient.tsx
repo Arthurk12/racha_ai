@@ -16,6 +16,7 @@ interface User {
   name: string
   isAdmin: boolean
   hasFinishedAdding: boolean
+  isDefaultPin?: boolean
 }
 
 interface Expense {
@@ -338,6 +339,25 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
 
   return (
     <div className="min-h-screen bg-slate-900 p-4 relative">
+      {/* Default PIN Warning Overlay */}
+      {currentUser?.isDefaultPin && (
+          <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-40 px-4">
+             <div className="bg-slate-800/95 border border-amber-500/50 p-6 rounded-xl shadow-[0_0_50px_rgba(245,158,11,0.2)] max-w-sm w-full text-center pointer-events-auto backdrop-blur-md animate-in zoom-in duration-300">
+                 <div className="w-12 h-12 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl border border-amber-500/20 shadow-inner">
+                    ⚠️
+                 </div>
+                 <h3 className="text-white font-bold text-lg mb-2">Troque sua Senha</h3>
+                 <p className="text-slate-300 text-sm mb-4 leading-relaxed">
+                    Sua conta está usando o PIN padrão <span className="font-mono text-amber-400 bg-amber-900/30 px-1.5 py-0.5 rounded border border-amber-500/30">0000</span>. 
+                    Por segurança, defina uma nova senha agora mesmo.
+                 </p>
+                 <div className="text-xs text-slate-500 bg-slate-900/50 p-2 rounded border border-slate-700/50">
+                    Clique em <span className="text-amber-400 font-semibold">🔑 Alterar PIN</span> no topo direito da tela.
+                 </div>
+             </div>
+          </div>
+      )}
+
       {/* Pin Change Modal */}
       {showPinModal && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">

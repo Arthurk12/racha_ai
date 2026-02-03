@@ -38,7 +38,8 @@ export default async function GroupPage({ params }: { params: { id: string } }) 
     id: u.id,
     name: u.name,
     isAdmin: u.isAdmin,
-    hasFinishedAdding: u.hasFinishedAdding
+    hasFinishedAdding: u.hasFinishedAdding,
+    isDefaultPin: u.pin === '0000'
   }))
 
   return (
