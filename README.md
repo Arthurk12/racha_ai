@@ -28,7 +28,7 @@ graph TD
 
 - **Frontend:** Next.js 14 (App Router), React, Tailwind CSS.
 - **Backend:** Next.js Server Actions.
-- **Database:** PostgreSQL (Supabase) com Prisma ORM.
+- **Database:** SQLite (Local) ou PostgreSQL (Supabase/Prod) com Prisma ORM.
 
 ## 📦 Instalação e Execução
 
@@ -37,10 +37,29 @@ graph TD
    npm install
    ```
 
-2. Configure as variáveis de ambiente:
-   Renomeie `.env.example` para `.env` e adicione suas credenciais do Supabase.
+2. Configuração do Banco de Dados (Escolha um):
 
-3. Configure o Banco de Dados:
+   **Opção A: SQLite (Recomendado para rodar localmente)**
+   
+   Certifique-se que seu `prisma/schema.prisma` está configurado assim:
+   ```prisma
+    // datasource db {
+    //   provider = "postgresql"
+    //   url      = env("DATABASE_URL")
+    // }
+
+    datasource db {
+      provider = "sqlite"
+      url      = "file:./dev.db"
+    }
+   ```
+   *Não é necessário configurar variáveis de ambiente complexas.*
+
+   **Opção B: PostgreSQL / Supabase**
+   
+   Configure o `prisma/schema.prisma` para usar o provider `postgresql` e defina a variável `DATABASE_URL` no seu arquivo `.env`.
+
+3. Crie o Banco de Dados:
    ```bash
    npx prisma db push
    ```
