@@ -58,9 +58,33 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
   }, [participantsRef]);
 
   // Set default participants to all users when the list changes
+  // Only update if user count changes to avoid resetting selection during auto-refresh
   useEffect(() => {
-    setParticipants(users.map(u => u.id))
-  }, [users])
+    setParticipants(prev => {
+        // Se o número de usuários mudou (alguém entrou/saiu), reseta para todos
+        // Se o número é o mesmo, assume que é só refresh e mantém a seleção atual (a menos que seja vazia)
+        if (users.length !== prev.length && prev.length > 0 && prev.length !== users.length) {
+             // Tenta manter os IDs que ainda existem
+             const existing = prev.filter(id => users.some(u => u.id === id))
+             
+             // Se todos os selecionados ainda existem, mantém.
+             // Se entrou gente nova, talvez seja melhor adicionar? 
+             // Regra simples: Se todos selecionados, mantém todos (incluindo novos).
+             // Se seleção parcial, mantém parcial.
+             
+             // Simplificando: Se users mudou, reseta tudo para evitar inconsistência
+             return users.map(u => u.id)
+        }
+        
+        // Na primeira renderização ou se estava vazio (assumindo "todos")
+        if (prev.length === 0) return users.map(u => u.id)
+        
+        // Caso contrário, verificar se novos usuários entraram para incluí-los por padrão?
+        // Vamos manter a lógica simples: novos usuários entram selecionados se a lista estava "full".
+        const allWasSelected = prev.length >= users.length - 1 // tolerância de 1
+        return allWasSelected ? users.map(u => u.id) : prev
+    })
+  }, [users]) // Removed unnecessary dependency on 'participants' or logic inside setParticipants handles it
 
   // Initialize date
   useEffect(() => {

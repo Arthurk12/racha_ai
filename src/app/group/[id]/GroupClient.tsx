@@ -75,6 +75,36 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
   const [newPin, setNewPin] = useState('')
   const [prevExpenseCount, setPrevExpenseCount] = useState(expenses.length)
 
+  // Polling e Eventos para atualização automática
+  useEffect(() => {
+    const handleRefresh = () => {
+        if (!document.hidden) {
+            startTransition(() => {
+                router.refresh()
+            })
+        }
+    }
+
+    // Atualiza a cada 4 segundos
+    const interval = setInterval(handleRefresh, 4000)
+
+    // Atualiza imediatamente ao focar ou reabrir a aba
+    const onVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+            handleRefresh()
+        }
+    }
+    
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    window.addEventListener('focus', handleRefresh)
+
+    return () => {
+        clearInterval(interval)
+        document.removeEventListener('visibilitychange', onVisibilityChange)
+        window.removeEventListener('focus', handleRefresh)
+    }
+  }, [router])
+
   useEffect(() => {
     if (expenses.length > prevExpenseCount) {
         // Use local sound asset for better performance
