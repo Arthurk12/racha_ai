@@ -246,7 +246,8 @@ export async function settleDebt(groupId: string, debtorId: string, creditorId: 
             amount: amount,
             paidById: debtorId, // Devedor paga
             groupId: groupId,
-            date: new Date(),
+            // Align with addExpense logic (Noon UTC) to ensure sorting within the same day uses createdAt
+            date: new Date(`${new Date().toISOString().split('T')[0]}T12:00:00Z`),
             isSettlement: true, // Marca como pagamento
             participants: {
                 create: [

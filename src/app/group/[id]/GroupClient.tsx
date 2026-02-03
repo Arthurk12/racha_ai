@@ -6,7 +6,7 @@ import ExpenseList from '@/components/ExpenseList'
 import ExpenseHistory from '@/components/ExpenseHistory'
 import BalanceSummary from '@/components/BalanceSummary'
 import CustomSelect from '@/components/CustomSelect'
-import { addUser, removeUser, addExpense, removeExpense, updateExpense, verifyUser, resetUserPin, updateUserPin, deleteGroup } from '@/app/actions'
+import { addUser, removeUser, addExpense, removeExpense, updateExpense, verifyUser, resetUserPin, updateUserPin, deleteGroup, toggleUserFinishedState } from '@/app/actions'
 import { useTransition } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import Image from 'next/image'
@@ -47,7 +47,21 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [pendingId, setPendingId] = useState<string | null>(null)
   
+  // Notification & Confirmation State
+  const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' | 'info' } | null>(null)
+  const [confirmConfig, setConfirmConfig] = useState<{ message: string, onConfirm: () => void } | null>(null)
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+      setNotification({ message, type })
+      setTimeout(() => setNotification(null), 3000)
+  }
+
+  const requestConfirm = (message: string, onConfirm: () => void) => {
+      setConfirmConfig({ message, onConfirm })
+  }
+
   // Auth state local to the modal
   const [authName, setAuthName] = useState('')
   const [authPin, setAuthPin] = useState('')
@@ -150,16 +164,33 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
     }
     // Pass currentUserId as the requester
     if (currentUserId) {
-        startTransition(async () => {
-          await removeUser(groupId, userId, currentUserId)
+        requestConfirm('Tem certeza que deseja remover este participante?', () => {
+             setPendingId(`remove-user-${userId}`)
+             startTransition(async () => {
+                await removeUser(groupId, userId, currentUserId)
+                setPendingId(null)
+             })
         })
     }
   }
 
+  const handleToggleFinished = (userId: string) => {
+      setPendingId(`toggle-finished-${userId}`)
+      startTransition(async () => {
+          await toggleUserFinishedState(groupId, userId)
+          setPendingId(null)
+      })
+  }
+
   const handleResetPin = (targetUserId: string) => {
-    if (currentUserId && confirm('Resetar PIN para 0000?')) {
-        startTransition(async () => {
-          await resetUserPin(groupId, targetUserId, currentUserId)
+    if (currentUserId) {
+        requestConfirm('Resetar PIN para 0000?', () => {
+             setPendingId(`reset-pin-${targetUserId}`)
+             startTransition(async () => {
+                await resetUserPin(groupId, targetUserId, currentUserId)
+                showToast('PIN resetado para 0000', 'success')
+                setPendingId(null)
+             })
         })
     }
   }
@@ -176,7 +207,11 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
   }
 
   const handleRemoveExpense = (expenseId: string) => {
-    startTransition(() => removeExpense(groupId, expenseId))
+    setPendingId(`remove-expense-${expenseId}`)
+    startTransition(async () => {
+        await removeExpense(groupId, expenseId)
+        setPendingId(null)
+    })
   }
 
   const handleUpdateExpense = (expenseId: string, data: { description: string, amount: number, date: string, participants: string[] }) => {
@@ -187,10 +222,14 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
         formData.append('date', data.date)
         data.participants.forEach(p => formData.append('participants', p))
         
+        setPendingId(`update-expense-${expenseId}`)
         startTransition(async () => {
             const result: any = await updateExpense(groupId, expenseId, formData, currentUserId)
+            setPendingId(null)
             if (result.error) {
-                alert(result.error)
+                showToast(result.error, 'error')
+            } else {
+                showToast('Despesa atualizada', 'success')
             }
         })
     }
@@ -198,7 +237,7 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
 
   const handleChangePin = () => {
     if (newPin.length < 4) {
-      alert('PIN deve ter 4 dígitos')
+      showToast('PIN deve ter 4 dígitos', 'error')
       return
     }
     if (currentUserId) {
@@ -206,13 +245,48 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
             await updateUserPin(groupId, currentUserId, newPin)
             setShowPinModal(false)
             setNewPin('')
-            alert('PIN alterado com sucesso!')
+            showToast('PIN alterado com sucesso!', 'success')
         })
     }
   }
 
   if (isCheckingAuth) {
-    return <div className="min-h-screen bg-slate-900 flex items-center justify-center text-green-400">Carregando...</div>
+    return (
+        <div className="min-h-screen bg-slate-900 flex items-center justify-center overflow-hidden relative">
+            <div className="text-center z-10 p-8 bg-slate-800/80 backdrop-blur-sm rounded-xl border border-green-500/30 shadow-2xl flex flex-col items-center">
+                <div className="text-4xl mb-4 animate-bounce">🪙</div>
+                <p className="text-green-400 font-bold text-lg animate-pulse">Contando as moedas...</p>
+            </div>
+            
+            {/* Falling Coins Background */}
+            <div className="absolute inset-0 pointer-events-none">
+                {[
+                    { left: '10%', dur: '3.5s', del: '0s', icon: '🪙' },
+                    { left: '30%', dur: '4.2s', del: '1.5s', icon: '💰' },
+                    { left: '50%', dur: '3.0s', del: '0.5s', icon: '💸' },
+                    { left: '70%', dur: '4.5s', del: '2.0s', icon: '🪙' },
+                    { left: '90%', dur: '3.8s', del: '1.0s', icon: '💰' },
+                    { left: '20%', dur: '5.0s', del: '2.5s', icon: '💸' },
+                    { left: '60%', dur: '3.2s', del: '3.0s', icon: '🪙' },
+                    { left: '80%', dur: '4.0s', del: '0.8s', icon: '💰' },
+                    { left: '40%', dur: '2.8s', del: '1.8s', icon: '💸' },
+                    { left: '15%', dur: '4.8s', del: '3.5s', icon: '🪙' },
+                ].map((coin, i) => (
+                    <div 
+                        key={i}
+                        className="absolute -top-10 text-2xl animate-fall opacity-0"
+                        style={{
+                            left: coin.left,
+                            animationDuration: coin.dur,
+                            animationDelay: coin.del,
+                        }}
+                    >
+                        {coin.icon}
+                    </div>
+                ))}
+            </div>
+        </div>
+    )
   }
 
   // Se não estiver autenticado/selecionado, mostra apenas a "Landing do Grupo" (Modal Centralizado)
@@ -473,7 +547,7 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="contents md:flex md:flex-col md:gap-6">
             <div className="order-1">
-              <BalanceSummary users={users} expenses={expenses} currentUserId={currentUserId} />
+              <BalanceSummary users={users} expenses={expenses} currentUserId={currentUserId} onConfirm={requestConfirm} />
             </div>
             
             <div className="order-3">
@@ -484,6 +558,8 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
                   updateExpense={handleUpdateExpense} 
                   currentUserId={currentUserId}
                   isAdmin={isCurrentUserAdmin}
+                  onShowToast={showToast}
+                  pendingId={pendingId}
               />
             </div>
           </div>
@@ -495,10 +571,12 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
                 addExpense={handleAddExpense} 
                 removeExpense={handleRemoveExpense} 
                 currentUserId={currentUserId}
-                isPending={isPending}
+                isPending={isAddingExpense}
                 isAdmin={isCurrentUserAdmin}
+                onShowToast={showToast}
+                onToggleFinished={handleToggleFinished}
+                hasFinishedAdding={currentUser?.hasFinishedAdding}
               />
-              {isPending && <p className="text-sm text-green-400 mb-2 animate-pulse mt-2">Atualizando...</p>}
             </div>
             <div className="order-4">
               <UserList 
@@ -507,6 +585,9 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
                 isAdmin={isCurrentUserAdmin}
                 currentUserId={currentUserId}
                 onResetPin={handleResetPin}
+                onToggleFinished={handleToggleFinished}
+                onInfo={(msg) => showToast(msg, 'info')}
+                pendingId={pendingId}
               />
             </div>
           </div>
@@ -516,18 +597,18 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
                <h3 className="text-lg font-bold text-red-500 mb-2">Zona de Perigo (Admin)</h3>
                <button
                  onClick={() => {
-                   if (confirm('Tem certeza? Isso apagará o grupo e todas as despesas permanentemente.')) {
+                   requestConfirm('Tem certeza? Isso apagará o grupo e todas as despesas permanentemente.', () => {
                       if (currentUserId) {
                        startTransition(async () => {
                          const res = await deleteGroup(groupId, currentUserId)
                          if (res && res.success) {
                            router.push('/?groupClosed=true')
                          } else {
-                           alert('Erro ao excluir grupo.')
+                           showToast('Erro ao excluir grupo.', 'error')
                          }
                        })
                       }
-                   }
+                   })
                  }}
                  className="bg-red-900/50 border border-red-800 text-red-200 px-4 py-2 rounded hover:bg-red-900 transition-colors text-sm"
                >
@@ -540,6 +621,47 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
             <p>Grupos inativos por mais de 30 dias serão automaticamente removidos.</p>
             <p>Projeto Vibecoded © 2026</p>
         </footer>
+
+        {/* Notification Toast */}
+      {notification && (
+        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-full shadow-2xl border flex items-center gap-3 animate-in slide-in-from-top-4 fade-in duration-300 ${
+            notification.type === 'success' ? 'bg-green-900/90 border-green-500 text-green-100' :
+            notification.type === 'error' ? 'bg-red-900/90 border-red-500 text-red-100' :
+            'bg-slate-800/90 border-slate-600 text-slate-100'
+        }`}>
+            {notification.type === 'success' && <span>✅</span>}
+            {notification.type === 'error' && <span>❌</span>}
+            {notification.type === 'info' && <span>ℹ️</span>}
+            <span className="font-medium text-sm">{notification.message}</span>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {confirmConfig && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="bg-slate-800 border border-slate-600 rounded-xl shadow-2xl max-w-sm w-full p-6 animate-in zoom-in-95 duration-200">
+                <h3 className="text-xl font-bold text-white mb-2">Confirmação</h3>
+                <p className="text-slate-300 mb-6">{confirmConfig.message}</p>
+                <div className="flex gap-3">
+                    <button 
+                        onClick={() => setConfirmConfig(null)}
+                        className="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded transition-colors"
+                    >
+                        Cancelar
+                    </button>
+                    <button 
+                        onClick={() => {
+                            confirmConfig.onConfirm()
+                            setConfirmConfig(null)
+                        }}
+                        className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-500 text-white font-bold rounded transition-colors"
+                    >
+                        Confirmar
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
       </div>
     </div>
   )

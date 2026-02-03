@@ -22,6 +22,7 @@ model User {
   name         String
   pin          String               @default("0000") // Default temporário para migração, na prática será obrigatório
   isAdmin      Boolean              @default(false)
+  hasFinishedAdding Boolean         @default(false)
   group        Group                @relation(fields: [groupId], references: [id], onDelete: Cascade)
   groupId      String
   expensesPaid Expense[]            @relation("PaidBy")
@@ -39,6 +40,7 @@ model Expense {
   participants ExpenseParticipant[]
   createdAt    DateTime             @default(now())
   date         DateTime             @default(now())
+  isSettlement Boolean              @default(false)
 }
 
 model ExpenseParticipant {

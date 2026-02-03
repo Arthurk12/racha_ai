@@ -24,13 +24,19 @@ export default function Home() {
     adminPin: ''
   })
   const [isPending, setIsPending] = useState(false)
+  const [errorToast, setErrorToast] = useState<string | null>(null)
+
+  const showToast = (msg: string) => {
+      setErrorToast(msg)
+      setTimeout(() => setErrorToast(null), 3000)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsPending(true)
     
     if (formData.adminPin.length < 4) {
-      alert('PIN deve ter 4 dígitos')
+      showToast('PIN deve ter 4 dígitos')
       setIsPending(false)
       return
     }
@@ -43,17 +49,25 @@ export default function Home() {
         router.push(`/group/${result.groupId}?created=true`)
       } else {
         setIsPending(false)
-        alert('Erro ao criar grupo: Retorno vazio do servidor.')
+        showToast('Erro ao criar grupo: Tente novamente.')
       }
     } catch (error) {
       console.error(error)
       setIsPending(false)
-      alert('Erro grave ao criar grupo. Verifique o console ou os logs.')
+      showToast('Erro de conexão. Verifique sua internet.')
     }
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 relative">
+       {/* Error Toast */}
+       {errorToast && (
+          <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-full shadow-2xl border bg-red-900/90 border-red-500 text-red-100 flex items-center gap-3 animate-in slide-in-from-top-4 fade-in duration-300">
+              <span>⚠️</span>
+              <span className="font-medium text-sm">{errorToast}</span>
+          </div>
+       )}
+
       {/* Success Modal for Group Closure */}
       {showExitModal && (
         <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">

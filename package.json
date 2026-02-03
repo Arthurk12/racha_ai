@@ -11,9 +11,11 @@
   },
   "dependencies": {
     "@prisma/client": "^5.10.0",
+    "@types/ua-parser-js": "^0.7.39",
     "next": "14.0.0",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "ua-parser-js": "^2.0.8"
   },
   "devDependencies": {
     "@types/node": "^20",

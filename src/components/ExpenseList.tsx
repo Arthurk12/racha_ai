@@ -27,9 +27,12 @@ interface ExpenseListProps {
   currentUserId: string | null
   isPending?: boolean
   isAdmin: boolean
+  onShowToast: (message: string, type: 'success' | 'error' | 'info') => void
+  onToggleFinished?: (id: string) => void
+  hasFinishedAdding?: boolean
 }
 
-export default function ExpenseList({ users, expenses, addExpense, removeExpense, currentUserId, isPending, isAdmin }: ExpenseListProps) {
+export default function ExpenseList({ users, expenses, addExpense, removeExpense, currentUserId, isPending, isAdmin, onShowToast, onToggleFinished, hasFinishedAdding }: ExpenseListProps) {
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
   const [paidBy, setPaidBy] = useState('')
@@ -133,7 +136,7 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
       setParticipants(users.map(u => u.id))
       setIsDirectPayment(false) // Reset direct payment mode
     } else if (date.length !== 10) {
-        alert('Data inválida. Use o formato DD/MM/AAAA')
+        onShowToast('Data inválida. Use o formato DD/MM/AAAA', 'error')
     }
   }
 
@@ -364,6 +367,20 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
             </>
           ) : 'Adicionar Despesa'}
         </button>
+
+        {currentUserId && expenses.some(e => e.paidBy === currentUserId) && !hasFinishedAdding && onToggleFinished && (
+            <div className="mt-6 pt-4 border-t border-slate-700 animate-in fade-in slide-in-from-top-2">
+                <p className="text-center text-xs text-slate-400 mb-3">
+                    Já lançou tudo que pagou?
+                </p>
+                <button
+                    onClick={() => onToggleFinished(currentUserId)}
+                    className="w-full px-4 py-2 bg-transparent border border-green-500/50 text-green-400 rounded hover:bg-green-500/10 transition-colors text-sm flex items-center justify-center gap-2 font-medium"
+                >
+                    MARCAR COMO FINALIZADO
+                </button>
+            </div>
+        )}
       </div>
     </div>
   )

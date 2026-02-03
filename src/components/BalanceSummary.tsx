@@ -9,6 +9,7 @@ import { useParams } from 'next/navigation'
 interface User {
   id: string
   name: string
+  hasFinishedAdding?: boolean
 }
 
 interface Expense {
@@ -25,9 +26,10 @@ interface BalanceSummaryProps {
   users: User[]
   expenses: Expense[]
   currentUserId: string | null
+  onConfirm: (message: string, action: () => void) => void
 }
 
-export default function BalanceSummary({ users, expenses, currentUserId }: BalanceSummaryProps) {
+export default function BalanceSummary({ users, expenses, currentUserId, onConfirm }: BalanceSummaryProps) {
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null)
   const [expandedSuggestionIndex, setExpandedSuggestionIndex] = useState<number | null>(null)
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -40,11 +42,11 @@ export default function BalanceSummary({ users, expenses, currentUserId }: Balan
          Allow settlement if I'm the debtor (paying) OR creditor (confirming receipt).
          The action logic will always create expense as PaidBy: Debtor, Participant: Creditor.
       */
-      if (confirm(`Confirmar o pagamento de ${amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}?`)) {
+      onConfirm(`Confirmar o pagamento de ${amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}?`, () => {
           startTransition(async () => {
               await settleDebt(groupId, debtorId, creditorId, amount)
           })
-      }
+      })
   }
 
   const balances = useMemo(() => {
@@ -102,11 +104,14 @@ export default function BalanceSummary({ users, expenses, currentUserId }: Balan
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={`w-3 h-3 text-slate-400 flex-shrink-0 transition-transform ${expandedUserId === user.id ? 'rotate-90' : ''}`}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                     </svg>
-                    <span className={`truncate flex-1 border-r border-slate-600 pr-2 font-bold ${getUserColor(user.id)}`} title={user.name}>{user.name}</span>
+                    <span className={`truncate flex-1 border-r border-slate-600 pr-2 font-bold ${getUserColor(user.id)}`} title={user.name}>
+                        {user.name}
+                        {user.id === currentUserId && <span className="text-slate-400 font-normal text-xs ml-1">(você)</span>}
+                    </span>
                 </div>
                 
                 <div className="flex flex-col items-end shrink-0">
-                <span className={`font-semibold whitespace-nowrap ${user.balance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                <span className={`font-semibold whitespace-nowrap ${Math.abs(user.balance) < 0.01 ? 'text-slate-400' : user.balance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                     {Math.abs(user.balance).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </span>
                 <span className="text-[10px] text-slate-400 uppercase tracking-wider font-medium whitespace-nowrap">
@@ -172,6 +177,9 @@ export default function BalanceSummary({ users, expenses, currentUserId }: Balan
                     const isExpanded = expandedSuggestionIndex === index
                     const breakdown = isExpanded ? getDebtBreakdown(sugg.debtor.id, sugg.creditor.id, expenses) : []
 
+                    const notFinishedUsers = [sugg.debtor, sugg.creditor].filter(u => !u.hasFinishedAdding)
+                    const isTransactionUnstable = notFinishedUsers.length > 0
+
                     return (
                     <li key={index} className="bg-slate-700 text-slate-200 rounded border border-slate-600 flex flex-col">
                         <div 
@@ -192,15 +200,25 @@ export default function BalanceSummary({ users, expenses, currentUserId }: Balan
                             {/* Settlement Button */}
                             {currentUserId && (currentUserId === sugg.debtor.id || currentUserId === sugg.creditor.id) && (
                                 <div className="mb-4 bg-slate-700/50 p-3 rounded border border-slate-600 flex flex-col items-center justify-center gap-2">
+                                    {isTransactionUnstable && (
+                                        <div className="w-full text-xs bg-amber-500/10 border border-amber-500/20 text-amber-200 p-2 rounded mb-1">
+                                            <p className="font-bold mb-1">⚠️ Atenção</p>
+                                            <p>
+                                                {notFinishedUsers.length === 1 ? notFinishedUsers[0].name : 'Alguns participantes'}{' '} 
+                                                ainda não {notFinishedUsers.length === 1 ? 'sinalizou' : 'sinalizaram'} que {notFinishedUsers.length === 1 ? 'finalizou' : 'finalizaram'} os lançamentos.
+                                            </p>
+                                            <p className="opacity-80 mt-1">O valor deste acerto pode sofrer alterações.</p>
+                                        </div>
+                                    )}
                                     <p className="text-sm text-slate-300">
                                         {currentUserId === sugg.debtor.id ? 'Já pagou essa dívida?' : 'Já recebeu esse valor?'}
                                     </p>
                                     <button 
                                         onClick={() => handleSettle(sugg.debtor.id, sugg.creditor.id, sugg.amountValue)}
                                         disabled={isPending}
-                                        className="bg-green-600 hover:bg-green-500 text-white font-bold py-1 px-4 rounded text-sm w-full md:w-auto shadow-sm transition-colors disabled:opacity-50"
+                                        className={`${isTransactionUnstable ? 'bg-amber-600 hover:bg-amber-500' : 'bg-green-600 hover:bg-green-500'} text-white font-bold py-1 px-4 rounded text-sm w-full md:w-auto shadow-sm transition-colors disabled:opacity-50`}
                                     >
-                                        {isPending ? 'Processando...' : 'Marcar como Quitado (Criar despesa de reembolso)'}
+                                        {isPending ? 'Processando...' : (isTransactionUnstable ? 'Lançar Pagamento Mesmo Assim' : 'Marcar como quitado')}
                                     </button>
                                 </div>
                             )}

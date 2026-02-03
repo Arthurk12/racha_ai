@@ -1,9 +1,9 @@
 'use client'
 
-import { startTransition, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { getUserColor } from '@/lib/colors'
-import { toggleUserFinishedState } from '@/app/actions'
 import { useParams } from 'next/navigation'
+import { UAParser } from 'ua-parser-js'
 
 interface User {
   id: string
@@ -17,28 +17,45 @@ interface UserListProps {
   removeUser: (id: string) => void
   isAdmin: boolean
   onResetPin: (id: string) => void
+  onToggleFinished: (id: string) => void
   currentUserId: string | null
+  onInfo: (message: string) => void
+  pendingId: string | null
 }
 
-export default function UserList({ users, removeUser, isAdmin, onResetPin, currentUserId }: UserListProps) {
+export default function UserList({ users, removeUser, isAdmin, onResetPin, onToggleFinished, currentUserId, onInfo, pendingId }: UserListProps) {
   const [linkCopied, setLinkCopied] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const params = useParams()
   const groupId = params.id as string
 
-  const handleToggleFinished = () => {
+  useEffect(() => {
+    const parser = new UAParser()
+    const result = parser.getResult()
+    // type: console, mobile, tablet, smarttv, wearable, embedded
+    const isMobileDevice = result.device.type === 'mobile' || result.device.type === 'tablet'
+    setIsMobile(isMobileDevice)
+  }, [])
+
+  const handleToggleFinishedLocal = () => {
     if (!currentUserId) return
-    startTransition(() => {
-        toggleUserFinishedState(groupId, currentUserId)
-    })
+    onToggleFinished(currentUserId)
   }
 
   return (
     <div className="bg-slate-800 p-6 rounded-lg shadow-xl border border-slate-700 mb-6">
       <div className="mb-4">
         <h2 className="text-xl font-semibold text-green-400 inline-block mr-2">Participantes</h2>
-        <span className="text-[10px] text-amber-500/80 md:hidden block mt-1 leading-tight">
-          * Para resetar um PIN esquecido, o admin pode clicar em &quot;Resetar PIN&quot; (define como 0000).
-        </span>
+        {isMobile && (
+            <div className="flex flex-col gap-1 mt-2">
+                <span className="text-xs text-slate-400 leading-tight">
+                * <strong>FINALIZAR:</strong> Sinalize que você já lançou todas suas despesas.
+                </span>
+                <span className="text-xs text-amber-500 leading-tight">
+                * <strong>Resetar PIN:</strong> O admin pode resetar o PIN de alguém para 0000.
+                </span>
+            </div>
+        )}
       </div>
       
       <ul className="space-y-2">
@@ -61,22 +78,48 @@ export default function UserList({ users, removeUser, isAdmin, onResetPin, curre
             
             <div className="flex gap-2 items-center">
                {currentUserId === user.id && (
-                  <button
-                    onClick={handleToggleFinished}
-                    className={`text-[10px] uppercase font-bold px-2 py-1 rounded border transition-colors ${user.hasFinishedAdding ? 'bg-green-600 text-white border-green-500 hover:bg-green-500' : 'bg-slate-800 text-slate-400 border-slate-600 hover:bg-slate-700 hover:text-white'}`}
-                    title={user.hasFinishedAdding ? "Clique para reabrir lançamentos" : "Clique para marcar que finalizou"}
-                  >
-                      {user.hasFinishedAdding ? 'Reabrir' : 'Finalizar?'}
-                  </button>
+                  <div className="relative group/finish flex items-center">
+                      <button
+                        onClick={handleToggleFinishedLocal}
+                        disabled={pendingId === `toggle-finished-${user.id}`}
+                        className={`text-[10px] uppercase font-bold px-2 py-1 rounded border transition-colors flex items-center gap-1 ${user.hasFinishedAdding ? 'bg-green-600 text-white border-green-500 hover:bg-green-500' : 'bg-slate-800 text-slate-400 border-slate-600 hover:bg-slate-700 hover:text-white'} ${pendingId === `toggle-finished-${user.id}` ? 'opacity-70 cursor-not-allowed' : ''}`}
+                      >
+                          {pendingId === `toggle-finished-${user.id}` && (
+                            <svg className="animate-spin h-3 w-3 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                          )}
+                          {user.hasFinishedAdding ? 'Reabrir' : 'Finalizar?'}
+                      </button>
+                      
+                      {/* Tooltip for Desktop Hover */}
+                      <div className="hidden md:block absolute bottom-full right-0 mb-2 w-56 bg-slate-800 text-slate-200 text-xs rounded p-3 border border-slate-600 shadow-xl opacity-0 group-hover/finish:opacity-100 transition-opacity z-20 pointer-events-none">
+                          <p className="font-semibold text-green-400 mb-1">Para que serve?</p>
+                          <p>
+                            Sinalize aos outros participantes que você já lançou todas suas despesas. 
+                            Assim, todos saberão que o saldo é final e podem prosseguir com os pagamentos.
+                          </p>
+                          <div className="absolute -bottom-1 right-4 w-2 h-2 bg-slate-800 border-b border-r border-slate-600 rotate-45"></div>
+                      </div>
+                  </div>
                )}
 
                {isAdmin && !user.isAdmin && (
                 <div className="relative group/tooltip">
                   <button
                     onClick={() => onResetPin(user.id)}
-                    className="text-amber-500 hover:text-amber-400 text-xs mr-2 border border-amber-500/30 px-2 py-0.5 rounded hover:bg-amber-500/10 transition-colors"
+                    disabled={pendingId === `reset-pin-${user.id}`}
+                    className="text-amber-500 hover:text-amber-400 text-xs mr-2 border border-amber-500/30 px-2 py-0.5 rounded hover:bg-amber-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                   >
-                    Resetar PIN
+                    {pendingId === `reset-pin-${user.id}` ? (
+                        <svg className="animate-spin h-3 w-3 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    ) : (
+                        'Resetar PIN'
+                    )}
                   </button>
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-slate-800 text-slate-200 text-xs rounded p-2 border border-slate-600 shadow-xl opacity-0 group-hover/tooltip:opacity-100 pointer-events-none transition-opacity z-10 hidden md:block">
                     Restaura o PIN deste usuário para &quot;0000&quot; caso ele tenha esquecido.
@@ -92,10 +135,18 @@ export default function UserList({ users, removeUser, isAdmin, onResetPin, curre
                {(isAdmin || (currentUserId && user.id === currentUserId)) && (
                 <button
                   onClick={() => removeUser(user.id)}
-                  className="text-red-400 hover:text-red-300 focus:outline-none text-sm"
+                  disabled={pendingId === `remove-user-${user.id}`}
+                  className="text-red-400 hover:text-red-300 focus:outline-none text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   title={user.id === currentUserId ? "Sair do grupo" : "Remover usuário"}
                 >
-                  ✕
+                  {pendingId === `remove-user-${user.id}` ? (
+                     <svg className="animate-spin h-4 w-4 text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                     </svg>
+                  ) : (
+                     '✕'
+                  )}
                 </button>
                )}
             </div>
