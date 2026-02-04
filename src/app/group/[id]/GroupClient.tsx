@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { calculateBalances } from '@/lib/balance'
 import UserList from '@/components/UserList'
 import ExpenseList from '@/components/ExpenseList'
 import ExpenseHistory from '@/components/ExpenseHistory'
@@ -196,8 +197,22 @@ export default function GroupClient({ groupId, groupName, users, expenses, lastU
 
   const handleRemoveUser = (userId: string) => {
     const isRemovingSelf = userId === currentUserId
+    
+    // Verificação de Vínculos Financeiros
+    const paidExpensesCount = expenses.filter(e => e.paidBy === userId).length
+    const participationCount = expenses.filter(e => e.participants.includes(userId)).length
+    
+    if (paidExpensesCount > 0 || participationCount > 0) {
+        const msg = isRemovingSelf 
+            ? 'Não é possível excluir seu usuário pois existem despesas vinculadas a ele. Remova suas despesas e participações antes de sair.' 
+            : 'Não é possível remover este usuário pois existem despesas ou participações vinculadas a ele.'
+        
+        showToast(msg, 'error')
+        return
+    }
+
     const message = isRemovingSelf 
-        ? 'Tem certeza que deseja sair do grupo? Isso removerá seu usuário e todos os registros associados.' 
+        ? 'Tem certeza que deseja sair do grupo permanentemente?' 
         : 'Tem certeza que deseja remover este participante?'
 
     // Pass currentUserId as the requester
@@ -537,19 +552,29 @@ export default function GroupClient({ groupId, groupName, users, expenses, lastU
                  <button
                     onClick={() => setShowPinModal(true)}
                     className="text-sm bg-slate-800 hover:bg-slate-700 text-white md:px-3 md:py-1 px-4 py-2 rounded border border-slate-600 transition-colors"
+                    title="Alterar PIN"
                  >
-                    🔑 <span className="hidden sm:inline">Alterar PIN</span>
+                    🔑 <span className="hidden sm:inline">PIN</span>
                  </button>
                  <button 
-                onClick={() => {
-                    localStorage.removeItem(`racha_ai_user_${groupId}`)
-                    setCurrentUserId(null)
-                    // setShowAuthModal(true) // Removed to redirect instead
-                    router.push('/')
-                }}
-                className="text-sm text-red-400 hover:text-red-300 hover:underline ml-2 md:p-1 p-2"
+                    onClick={() => {
+                        localStorage.removeItem(`racha_ai_user_${groupId}`)
+                        setCurrentUserId(null)
+                        router.push('/')
+                    }}
+                    className="text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 md:px-3 md:py-1 px-4 py-2 rounded border border-slate-600 transition-colors"
+                    title="Desconectar deste dispositivo"
+                 >
+                    🔄 <span className="hidden sm:inline">Desconectar</span>
+                 </button>
+                 <button 
+                    onClick={() => {
+                        if (currentUserId) handleRemoveUser(currentUserId)
+                    }}
+                    className="text-sm bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 md:px-3 md:py-1 px-4 py-2 rounded transition-colors"
+                    title="Sair do grupo e apagar dados"
                 >
-                Sair
+                    🚪 <span className="hidden sm:inline">Sair</span>
                 </button>
              </div>
            )}
