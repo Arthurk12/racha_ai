@@ -6,7 +6,7 @@ import ExpenseList from '@/components/ExpenseList'
 import ExpenseHistory from '@/components/ExpenseHistory'
 import BalanceSummary from '@/components/BalanceSummary'
 import CustomSelect from '@/components/CustomSelect'
-import { addUser, removeUser, addExpense, removeExpense, updateExpense, verifyUser, resetUserPin, updateUserPin, deleteGroup, toggleUserFinishedState } from '@/app/actions'
+import { addUser, removeUser, addExpense, removeExpense, updateExpense, verifyUser, resetUserPin, updateUserPin, deleteGroup, toggleUserFinishedState, checkUpdates } from '@/app/actions'
 import { useTransition } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import Image from 'next/image'
@@ -34,16 +34,18 @@ interface GroupClientProps {
   groupName: string
   users: User[]
   expenses: Expense[]
+  lastUpdated: number
 }
 
-export default function GroupClient({ groupId, groupName, users, expenses }: GroupClientProps) {
+export default function GroupClient({ groupId, groupName, users, expenses, lastUpdated }: GroupClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const justCreated = searchParams.get('created') === 'true'
   
   let [isPending, startTransition] = useTransition()
-  let [isAddingExpense, startAddingExpense] = useTransition()
+  let [isAddingExpense, startAddingExpense] = useTransition() // Separate transition for adding expense
+  let [isRefreshing, startRefresh] = useTransition() // Separate transition for background refresh
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -77,11 +79,18 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
 
   // Polling e Eventos para atualização automática
   useEffect(() => {
-    const handleRefresh = () => {
+    const handleRefresh = async () => {
         if (!document.hidden) {
-            startTransition(() => {
-                router.refresh()
-            })
+             try {
+                const serverTime = await checkUpdates(groupId)
+                if (serverTime > lastUpdated) {
+                    startRefresh(() => {
+                        router.refresh()
+                    })
+                }
+             } catch (error) {
+                 console.error("Polling error:", error)
+             }
         }
     }
 
@@ -97,13 +106,13 @@ export default function GroupClient({ groupId, groupName, users, expenses }: Gro
     
     document.addEventListener('visibilitychange', onVisibilityChange)
     window.addEventListener('focus', handleRefresh)
-
+    
     return () => {
         clearInterval(interval)
         document.removeEventListener('visibilitychange', onVisibilityChange)
         window.removeEventListener('focus', handleRefresh)
     }
-  }, [router])
+  }, [router, groupId, lastUpdated])
 
   useEffect(() => {
     if (expenses.length > prevExpenseCount) {

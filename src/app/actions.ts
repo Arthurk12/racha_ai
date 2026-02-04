@@ -4,6 +4,14 @@ import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import bcrypt from 'bcryptjs'
 
+export async function checkUpdates(groupId: string) {
+  const group = await prisma.group.findUnique({
+    where: { id: groupId },
+    select: { updatedAt: true }
+  })
+  return group?.updatedAt.getTime() || 0
+}
+
 export async function createGroup(groupName: string, adminName: string, adminPin: string) {
   if (!groupName || !adminName || !adminPin) return null
 
@@ -61,6 +69,7 @@ export async function addUser(groupId: string, formData: FormData) {
     }
   })
 
+  await prisma.group.update({ where: { id: groupId }, data: { updatedAt: new Date() } })
   revalidatePath(`/group/${groupId}`)
   return { user }
 }
@@ -79,6 +88,7 @@ export async function resetUserPin(groupId: string, targetUserId: string, adminU
     data: { pin: hashedPin } // Resets to default
   })
 
+  await prisma.group.update({ where: { id: groupId }, data: { updatedAt: new Date() } })
   revalidatePath(`/group/${groupId}`)
   return { success: true }
 }
@@ -92,6 +102,7 @@ export async function updateUserPin(groupId: string, userId: string, newPin: str
     where: { id: userId },
     data: { pin: hashedPin }
   })
+  await prisma.group.update({ where: { id: groupId }, data: { updatedAt: new Date() } })
   
   revalidatePath(`/group/${groupId}`)
   return { success: true }
@@ -126,6 +137,7 @@ export async function removeUser(groupId: string, userId: string, requesterId: s
   await prisma.user.delete({
     where: { id: userId }
   })
+  await prisma.group.update({ where: { id: groupId }, data: { updatedAt: new Date() } })
   revalidatePath(`/group/${groupId}`)
   return { success: true }
 }
@@ -185,11 +197,13 @@ export async function addExpense(groupId: string, formData: FormData) {
       }
     }
   })
-
+  
+  await prisma.group.update({ where: { id: groupId }, data: { updatedAt: new Date() } })
   revalidatePath(`/group/${groupId}`)
 }
 
 export async function removeExpense(groupId: string, expenseId: string) {
+  await prisma.group.update({ where: { id: groupId }, data: { updatedAt: new Date() } })
   await prisma.expense.delete({
     where: { id: expenseId }
   })
@@ -240,6 +254,7 @@ export async function updateExpense(groupId: string, expenseId: string, formData
         }
     })
 
+    await prisma.group.update({ where: { id: groupId }, data: { updatedAt: new Date() } })
     revalidatePath(`/group/${groupId}`)
     return { success: true }
 }
@@ -250,6 +265,7 @@ export async function toggleUserFinishedState(groupId: string, userId: string) {
     const user = await prisma.user.findUnique({ where: { id: userId }})
     if (!user) return
 
+    await prisma.group.update({ where: { id: groupId }, data: { updatedAt: new Date() } })
     await prisma.user.update({
         where: { id: userId },
         data: { hasFinishedAdding: !user.hasFinishedAdding }
@@ -279,5 +295,6 @@ export async function settleDebt(groupId: string, debtorId: string, creditorId: 
             }
         }
     })
+    await prisma.group.update({ where: { id: groupId }, data: { updatedAt: new Date() } })
     revalidatePath(`/group/${groupId}`)
 }

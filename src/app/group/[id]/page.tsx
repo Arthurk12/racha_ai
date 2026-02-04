@@ -59,7 +59,8 @@ export default async function GroupPage({ params }: { params: { id: string } }) 
       groupId={group.id} 
       groupName={group.name} 
       users={users} 
-      expenses={expenses} 
+        expenses={expenses}
+        lastUpdated={group.updatedAt.getTime()}
     />
   )
 }
