@@ -577,7 +577,7 @@ export default function GroupClient({ groupId, groupName, users, expenses, lastU
                         className="text-sm bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 px-3 py-1 rounded transition-colors"
                         title="Sair do grupo e apagar dados permanentemente"
                     >
-                        🚪 Sair Definitivamente
+                        🚪 Deixar Grupo
                     </button>
                  </div>
 
@@ -640,7 +640,7 @@ export default function GroupClient({ groupId, groupName, users, expenses, lastU
                                     }}
                                     className="px-4 py-4 text-left hover:bg-red-900/20 text-red-400 font-medium flex items-center gap-3 transition-colors"
                                 >
-                                    🚪 Sair Definitivamente
+                                    🚪 Deixar Grupo
                                 </button>
                             </div>
                         </>
