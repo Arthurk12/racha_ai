@@ -357,7 +357,9 @@ export default function GroupClient({ groupId, groupName, users, expenses, lastU
         <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 overflow-x-hidden">
              <div className="bg-slate-800 p-6 rounded-lg shadow-2xl max-w-md w-full border border-slate-700">
             <h1 className="text-3xl font-bold mb-2 text-center text-green-400 flex items-center justify-center gap-2 flex-wrap">
-                <Image src="/icon" alt="Logo" width={32} height={32} className="rounded-full shadow-sm" />
+                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-sm">
+                  R$
+                </div>
                 <span>Racha AI</span>
             </h1>
             <p className="text-center text-slate-400 mb-6">Você foi convidado para o grupo <span className="text-slate-200 font-semibold">{groupName}</span></p>
@@ -531,7 +533,9 @@ export default function GroupClient({ groupId, groupName, users, expenses, lastU
         <div className="flex justify-between items-center mb-6">
            <div>
              <h1 className="text-3xl font-bold mb-1 text-green-400 flex items-center gap-2">
-                <Image src="/icon" alt="Logo" width={32} height={32} className="rounded-full shadow-sm" />
+                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-sm">
+                  R$
+                </div>
                 Racha AI
              </h1>
              <h2 className="text-xl text-slate-400">Grupo: <span className="text-slate-200">{groupName}</span></h2>
