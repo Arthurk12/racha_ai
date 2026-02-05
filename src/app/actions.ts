@@ -12,14 +12,41 @@ export async function checkUpdates(groupId: string) {
   return group?.updatedAt.getTime() || 0
 }
 
+function generateShortId(length: number = 4) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
 export async function createGroup(groupName: string, adminName: string, adminPin: string) {
   if (!groupName || !adminName || !adminPin) return null
 
   const hashedPin = await bcrypt.hash(adminPin, 10)
 
+  // Generate a unique 8-character ID (XXXX-XXXX)
+  let groupId: string | undefined;
+  let attempts = 0;
+  
+  while (!groupId && attempts < 5) {
+     const idCandidate = `${generateShortId(4)}-${generateShortId(4)}`;
+     const existing = await prisma.group.findUnique({ where: { id: idCandidate } });
+     if (!existing) {
+       groupId = idCandidate;
+     }
+     attempts++;
+  }
+
+  if (!groupId) {
+    throw new Error("Não foi possível gerar um ID único para o grupo. Tente novamente.");
+  }
+
   try {
     const group = await prisma.group.create({
       data: { 
+        id: groupId,
         name: groupName,
         users: {
           create: {
