@@ -219,16 +219,25 @@ export default function GroupClient({ groupId, groupName, users, expenses, lastU
     // Pass currentUserId as the requester
     if (currentUserId) {
         requestConfirm(message, () => {
-             if (isRemovingSelf) {
-                localStorage.removeItem(`racha_ai_user_${groupId}`)
-                setCurrentUserId(null)
-                setShowAuthModal(true)
-                router.push('/')
-             }
-             
              setPendingId(`remove-user-${userId}`)
+             
              startTransition(async () => {
-                await removeUser(groupId, userId, currentUserId)
+                const result: any = await removeUser(groupId, userId, currentUserId)
+                
+                if (isRemovingSelf) {
+                    if (result && result.success) {
+                        localStorage.removeItem(`racha_ai_user_${groupId}`)
+                        setCurrentUserId(null)
+                        // Force full redirect to home
+                        window.location.href = '/'
+                    } else {
+                         // Failed to remove self
+                         showToast(result?.error || 'Erro ao sair do grupo', 'error')
+                    }
+                } else if (result?.error) {
+                    showToast(result.error, 'error')
+                }
+
                 setPendingId(null)
              })
         })
