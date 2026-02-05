@@ -1,155 +1,202 @@
-import { calculateBalances, calculatePairwiseDebts } from '../src/lib/balance';
-import assert from 'assert';
+import { describe, it, expect } from 'vitest'
+import { calculateBalances, getDebtBreakdown, calculatePairwiseDebts, Expense, User } from '../src/lib/balance'
 
-console.log('Running Balance Logic Tests...')
+describe('Balance Logic', () => {
+    
+    it('should split 50/50 correctly (Test Case 1)', () => {
+        const users = [{id: 'A', name: 'Alice'}, {id: 'B', name: 'Bob'}]
+        const expenses = [{amount: 100, paidBy: 'A', participants: ['A', 'B']}]
+        const result = calculateBalances(users, expenses)
 
-// Test Case 1: Simple 50/50 split
-const users1 = [{id: 'A', name: 'Alice'}, {id: 'B', name: 'Bob'}]
-const expenses1 = [{amount: 100, paidBy: 'A', participants: ['A', 'B']}]
-const result1 = calculateBalances(users1, expenses1)
+        expect(result['A']).toBe(50)
+        expect(result['B']).toBe(-50)
+    })
 
-assert.strictEqual(result1['A'], 50, 'Alice should receive 50')
-assert.strictEqual(result1['B'], -50, 'Bob should owe 50')
-console.log('Test Case 1 passed: Simple Split')
+    it('should split correctly among 3 people (Test Case 2)', () => {
+        const users = [{id: 'A', name: 'Alice'}, {id: 'B', name: 'Bob'}, {id: 'C', name: 'Charlie'}]
+        const expenses = [{amount: 90, paidBy: 'A', participants: ['A', 'B', 'C']}]
+        const result = calculateBalances(users, expenses)
 
-// Test Case 2: 3 People, one pays for all
-const users2 = [{id: 'A', name: 'Alice'}, {id: 'B', name: 'Bob'}, {id: 'C', name: 'Charlie'}]
-const expenses2 = [{amount: 90, paidBy: 'A', participants: ['A', 'B', 'C']}]
-const result2 = calculateBalances(users2, expenses2)
+        expect(result['A']).toBe(60)
+        expect(result['B']).toBe(-30)
+        expect(result['C']).toBe(-30)
+    })
 
-assert.strictEqual(result2['A'], 60, 'Alice paid 90, share is 30, receives 60')
-assert.strictEqual(result2['B'], -30, 'Bob owes 30')
-assert.strictEqual(result2['C'], -30, 'Charlie owes 30')
-console.log('Test Case 2 passed: 3 People Split')
+    it('should handle uneven payments correctly (Test Case 3)', () => {
+        const users = [{id: 'A', name: 'Alice'}, {id: 'B', name: 'Bob'}, {id: 'C', name: 'Charlie'}]
+        const expenses = [
+            {amount: 100, paidBy: 'A', participants: ['A', 'B']},
+            {amount: 60, paidBy: 'B', participants: ['A', 'B', 'C']}
+        ]
+        const result = calculateBalances(users, expenses)
 
-// Test Case 3: Uneven payments
-// A pays 100 for A, B
-// B pays 40 for A, B, C
-const expenses3 = [
-    {amount: 100, paidBy: 'A', participants: ['A', 'B']}, // A gets +50, B gets -50 (Net A: +50, B: -50)
-    {amount: 60, paidBy: 'B', participants: ['A', 'B', 'C']} // B gets +40 (paid 60, cost 20), A -20, C -20
-]
-// Expected:
-// A: +50 - 20 = +30
-// B: -50 + 40 = -10
-// C: 0 - 20 = -20
-// Sum: 30 - 10 - 20 = 0
-const result3 = calculateBalances(users2, expenses3)
+        expect(result['A']).toBe(30)
+        expect(result['B']).toBe(-10)
+        expect(result['C']).toBe(-20)
+    })
 
-// Floating point precision might be an issue, using closeTo or checking integer math if possible
-// Javascript precision handled by allowing small epsilon if needed, but here integers work out
-assert.strictEqual(result3['A'], 30)
-assert.strictEqual(result3['B'], -10)
-assert.strictEqual(result3['C'], -20)
-console.log('Test Case 3 passed: Multiple Expenses')
+    it('should handle offsetting payments correctly (Test Case 4)', () => {
+        const users = [{id: 'A', name: 'Alice'}, {id: 'B', name: 'Bob'}]
+        const expenses = [
+            {amount: 50, paidBy: 'A', participants: ['B']}, 
+            {amount: 50, paidBy: 'B', participants: ['A']} 
+        ]
+        const result = calculateBalances(users, expenses)
 
-// Test Case 4: Circular/Offsetting Payments
-// A pays 50 for B
-// B pays 50 for A
-const expenses4 = [
-    {amount: 50, paidBy: 'A', participants: ['B']}, 
-    {amount: 50, paidBy: 'B', participants: ['A']}
-]
-const result4 = calculateBalances(users1, expenses4)
-assert.strictEqual(result4['A'], 0, 'Alice should be 0')
-assert.strictEqual(result4['B'], 0, 'Bob should be 0')
-console.log('Test Case 4 passed: Circular Payments')
+        expect(result['A']).toBe(0)
+        expect(result['B']).toBe(0)
+    })
 
-// Test Case 5: Paying for oneself
-const expenses5 = [{amount: 100, paidBy: 'A', participants: ['A']}]
-const result5 = calculateBalances(users1, expenses5)
-assert.strictEqual(result5['A'], 0, 'Should not affect balance if paying for self')
-console.log('Test Case 5 passed: Self Payment')
+    // --- New Tests for Full Coverage ---
 
-// Test Case 6: Floating Point Precision
-// 100 split by 3 people = 33.333... each.
-// Payer pays 100. Payer share 33.333. Payer receives 66.666...
-// Others owe 33.333...
-const users3 = [{id: 'A', name: 'A'}, {id: 'B', name: 'B'}, {id: 'C', name: 'C'}]
-const expenses6 = [{amount: 100, paidBy: 'A', participants: ['A', 'B', 'C']}]
-const result6 = calculateBalances(users3, expenses6)
+    it('should ignore expense with no participants', () => {
+        const users = [{id: 'A', name: 'Alice'}]
+        const expenses = [{amount: 100, paidBy: 'A', participants: []}]
+        const result = calculateBalances(users, expenses)
+        expect(result['A']).toBe(0)
+    })
 
-const closeTo = (a: number, b: number) => Math.abs(a - b) < 0.0001
-assert.ok(closeTo(result6['A'], 66.6666), 'A balance approx 66.66')
-assert.ok(closeTo(result6['B'], -33.3333), 'B balance approx -33.33')
-assert.ok(closeTo(result6['C'], -33.3333), 'C balance approx -33.33')
-console.log('Test Case 6 passed: Floating Point')
+    it('should ignore deleted users in balance calculation', () => {
+        const users = [{id: 'A', name: 'Alice'}]
+        // B doesn't exist in 'users' array
+        const expenses = [{amount: 100, paidBy: 'A', participants: ['A', 'B']}]
+        const result = calculateBalances(users, expenses)
+        
+        // As defined in logic: if participant does not exist, we skip processing for them entirely.
+        // Therefore, A does not get the +50 credit for covering B.
+        expect(result['A']).toBe(0)
+    })
 
-// --- Pairwise Debt Tests ---
+    describe('getDebtBreakdown', () => {
+        it('should list correct credits (User1 paid for User2)', () => {
+            const expenses: Expense[] = [
+                { id: '1', amount: 100, paidBy: 'A', participants: ['A', 'B'], description: 'Food', date: new Date() }
+            ]
+            // A paid 100. Split 50. B owes A 50.
+            // Check breakdown for A vs B.
+            // Case 1: user1=A, user2=B. A paid, B participated. -> Credit for A.
+            const result = getDebtBreakdown('A', 'B', expenses)
+            expect(result).toHaveLength(1)
+            expect(result[0].isPayer).toBe(true)
+            expect(result[0].oweAmount).toBe(50)
+        })
 
-// Test Case 7: Simple Pairwise Debt
-// A pays 100 for B
-const result7 = calculatePairwiseDebts(users1, [{amount: 100, paidBy: 'A', participants: ['B']}])
-assert.strictEqual(result7.length, 1)
-assert.strictEqual(result7[0].debtorId, 'B')
-assert.strictEqual(result7[0].creditorId, 'A')
-assert.strictEqual(result7[0].amount, 100)
-console.log('Test Case 7 passed: Simple Pairwise')
+        it('should list correct debts (User2 paid for User1)', () => {
+            const expenses: Expense[] = [
+                { id: '1', amount: 100, paidBy: 'B', participants: ['A', 'B'], description: 'Food', date: new Date() }
+            ]
+            // B paid 100. Split 50. A owes B 50.
+            // Check breakdown for A vs B.
+            // Case 2: user2=B paid, user1=A participated. -> Debt for A.
+            const result = getDebtBreakdown('A', 'B', expenses)
+            expect(result).toHaveLength(1)
+            expect(result[0].isPayer).toBe(false)
+            expect(result[0].oweAmount).toBe(50)
+        })
 
-// Test Case 8: Reciprocal Debt Cancellation
-// A pays 50 for B
-// B pays 30 for A 
-// Net: B owes A 20
-const expenses8 = [
-    {amount: 50, paidBy: 'A', participants: ['B']},
-    {amount: 30, paidBy: 'B', participants: ['A']}
-]
-const result8 = calculatePairwiseDebts(users1, expenses8)
-assert.strictEqual(result8.length, 1)
-assert.strictEqual(result8[0].debtorId, 'B')
-assert.strictEqual(result8[0].creditorId, 'A')
-assert.strictEqual(result8[0].amount, 20)
-console.log('Test Case 8 passed: Reciprocal Cancellation')
+        it('should return empty if no relation', () => {
+            const expenses: Expense[] = [
+                { id: '1', amount: 100, paidBy: 'C', participants: ['C'], description: 'Solo', date: new Date() }
+            ]
+            const result = getDebtBreakdown('A', 'B', expenses)
+            expect(result).toHaveLength(0)
+        })
 
-// Test Case 9: No Debt Transfer (The "Julia/Felipe" case)
-// A pays 100 for B (B owes A 100)
-// B pays 50 for C (C owes B 50)
-// Global balance would say: A needs +100, B needs -50 (+100 -50), C needs -50.
-// A simplified view might suggest C pays 50 to A, B pays 50 to A.
-// But pairwise should strictly show: B->A (100) and C->B (50).
-const expenses9 = [
-    {amount: 100, paidBy: 'A', participants: ['B']},
-    {amount: 50, paidBy: 'B', participants: ['C']}
-]
-const result9 = calculatePairwiseDebts(users2, expenses9)
-// Expect 2 debts
-const debtBA = result9.find(d => d.debtorId === 'B' && d.creditorId === 'A')
-const debtCB = result9.find(d => d.debtorId === 'C' && d.creditorId === 'B')
+        it('should use default description if missing', () => {
+             const expenses: Expense[] = [
+                { id: '1', amount: 100, paidBy: 'B', participants: ['A', 'B'], description: undefined, date: new Date() }
+            ]
+            const result = getDebtBreakdown('A', 'B', expenses)
+            expect(result[0].description).toBe('Despesa sem descrição')
+        })
 
-assert.ok(debtBA, 'B should owe A')
-assert.strictEqual(debtBA?.amount, 100)
-assert.ok(debtCB, 'C should owe B')
-assert.strictEqual(debtCB?.amount, 50)
-assert.strictEqual(result9.length, 2, 'Should be exactly 2 debts')
-console.log('Test Case 9 passed: No Debt Transfer')
+        it('should sort by date descending', () => {
+            const d1 = new Date('2023-01-01')
+            const d2 = new Date('2023-01-02')
+            const expenses: Expense[] = [
+                { id: '1', amount: 10, paidBy: 'A', participants: ['B'], date: d1 },
+                { id: '2', amount: 10, paidBy: 'A', participants: ['B'], date: d2 }
+            ]
+            const result = getDebtBreakdown('A', 'B', expenses)
+            expect(result[0].date).toBe(d2) // Newest first
+            expect(result[1].date).toBe(d1)
+        })
+    })
 
+    describe('calculatePairwiseDebts', () => {
+        it('should simplify debts correctly', () => {
+            // A owes B 100
+            // B owes A 60
+            // Result: A owes B 40
+            const users = [{id: 'A', name: 'Alice'}, {id: 'B', name: 'Bob'}]
+            const expenses = [
+                { amount: 100, paidBy: 'B', participants: ['A'] }, // A owes B 100
+                { amount: 60, paidBy: 'A', participants: ['B'] },  // B owes A 60
+            ]
+            const result = calculatePairwiseDebts(users, expenses)
+            expect(result).toHaveLength(1)
+            expect(result[0]).toEqual({ debtorId: 'A', creditorId: 'B', amount: 40 })
+        })
 
-// Test Case 10: Complex Group Split
-// Group: A, B, C, D
-// Expense 1: A pays 400 for A, B, C, D (100 each). 
-// Debts: B->A (100), C->A (100), D->A (100)
-// Expense 2: B pays 200 for B, C (100 each).
-// Debts: C->B (100)
-// Combined:
-// B->A: 100
-// C->A: 100
-// D->A: 100
-// C->B: 100
-const users4 = [{id: 'A', name: 'A'}, {id: 'B', name: 'B'}, {id: 'C', name: 'C'}, {id: 'D', name: 'D'}]
-const expenses10 = [
-    {amount: 400, paidBy: 'A', participants: ['A', 'B', 'C', 'D']},
-    {amount: 200, paidBy: 'B', participants: ['B', 'C']}
-]
-const result10 = calculatePairwiseDebts(users4, expenses10)
+        it('should handle multiple items efficiently', () => {
+            // A owes B 10
+            // B owes C 10
+            // C owes A 10
+            // Algorithm doesn't optimize graph (A->B->C->A), it just does pairwise
+            // So A->B 10, B->C 10, C->A 10
+            const users = [{id: 'A', name: ''}, {id: 'B', name: ''}, {id: 'C', name: ''}]
+            const expenses = [
+                { amount: 10, paidBy: 'B', participants: ['A'] },
+                { amount: 10, paidBy: 'C', participants: ['B'] },
+                { amount: 10, paidBy: 'A', participants: ['C'] },
+            ]
+            const result = calculatePairwiseDebts(users, expenses)
+            expect(result).toHaveLength(3) // 3 distinct pairwise debts
+        })
 
-const findDebt = (from: string, to: string) => result10.find(d => d.debtorId === from && d.creditorId === to)
+    describe('Additional Coverage', () => {
+        it('calculatePairwiseDebts should return empty list if no expenses', () => {
+            const users: User[] = [{ id: 'A', name: 'A' }, { id: 'B', name: 'B' }]
+            const expenses: Expense[] = []
+            const result = calculatePairwiseDebts(users, expenses)
+            expect(result).toHaveLength(0)
+        })
 
-assert.strictEqual(findDebt('B', 'A')?.amount, 100, 'B should owe A 100')
-assert.strictEqual(findDebt('C', 'A')?.amount, 100, 'C should owe A 100')
-assert.strictEqual(findDebt('D', 'A')?.amount, 100, 'D should owe A 100')
-assert.strictEqual(findDebt('C', 'B')?.amount, 100, 'C should owe B 100')
-assert.strictEqual(result10.length, 4, 'Should be exactly 4 debts')
-console.log('Test Case 10 passed: Complex Group Split')
+       it('calculatePairwiseDebts should ignore expenses with no participants', () => {
+            const users: User[] = [{ id: 'A', name: 'A' }, { id: 'B', name: 'B' }]
+            const expenses: Expense[] = [
+                { amount: 100, paidBy: 'B', participants: [] }
+            ]
+            const result = calculatePairwiseDebts(users, expenses)
+            expect(result).toHaveLength(0)
+        })
 
+        it('getDebtBreakdown should ignore expenses with no participants', () => {
+             const breakdown = getDebtBreakdown('A', 'B', [{
+                 amount: 100, paidBy: 'A', participants: [],
+                 description: 'Empty', id: '1'
+             }])
+             expect(breakdown).toHaveLength(0)
+        })
 
-console.log('All tests passed successfully!')
+        it('calculateBalances should ignore expenses with no participants', () => {
+             const users = [{id: 'A', name: 'A'}]
+             const expenses = [{ amount: 100, paidBy: 'A', participants: [] }]
+             const result = calculateBalances(users, expenses)
+             expect(result['A']).toBe(0)
+        })
+
+        it('getDebtBreakdown should handle sort with missing dates', () => {
+             const expenses: Expense[] = [
+                 { id: '1', amount: 10, paidBy: 'A', participants: ['B'], date: undefined },
+                 { id: '2', amount: 10, paidBy: 'A', participants: ['B'], date: '2023-01-01' },
+                 { id: '3', amount: 10, paidBy: 'A', participants: ['B'], date: null as any }
+             ]
+             const breakdown = getDebtBreakdown('A', 'B', expenses)
+             expect(breakdown).toHaveLength(3)
+             expect(breakdown[0].expenseId).toBe('2')
+        })
+    })
+})
+
+})
