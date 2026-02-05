@@ -77,6 +77,7 @@ export default function GroupClient({ groupId, groupName, users, expenses, lastU
   const [showPinModal, setShowPinModal] = useState(false)
   const [newPin, setNewPin] = useState('')
   const [prevExpenseCount, setPrevExpenseCount] = useState(expenses.length)
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
 
   // Polling e Eventos para atualização automática
   useEffect(() => {
@@ -536,46 +537,115 @@ export default function GroupClient({ groupId, groupName, users, expenses, lastU
              <h2 className="text-xl text-slate-400">Grupo: <span className="text-slate-200">{groupName}</span></h2>
            </div>
            {currentUserId && (
-             <div className="flex gap-2 items-center">
-                 {!justCreated && (
+             <div className="flex gap-2 items-center relative">
+                 {/* Desktop Buttons */}
+                 <div className="hidden md:flex gap-2 items-center">
+                    {!justCreated && (
+                        <button
+                            onClick={() => {
+                                navigator.clipboard.writeText(window.location.href.split('?')[0])
+                                showToast('Link copiado!', 'success')
+                            }}
+                            className="text-sm bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 rounded border border-slate-600 transition-colors flex items-center gap-1"
+                            title="Copiar Link de Convite"
+                        >
+                            🔗 Copiar Link
+                        </button>
+                    )}
                     <button
-                        onClick={() => {
-                            navigator.clipboard.writeText(window.location.href.split('?')[0])
-                            showToast('Link copiado!', 'success')
-                        }}
-                        className="text-sm bg-slate-800 hover:bg-slate-700 text-white md:px-3 md:py-1 px-4 py-2 rounded border border-slate-600 transition-colors flex items-center gap-1"
-                        title="Copiar Link de Convite"
+                        onClick={() => setShowPinModal(true)}
+                        className="text-sm bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 rounded border border-slate-600 transition-colors"
+                        title="Alterar PIN"
                     >
-                        🔗 <span className="hidden sm:inline">Copiar Link</span>
+                        🔑 PIN
                     </button>
-                 )}
-                 <button
-                    onClick={() => setShowPinModal(true)}
-                    className="text-sm bg-slate-800 hover:bg-slate-700 text-white md:px-3 md:py-1 px-4 py-2 rounded border border-slate-600 transition-colors"
-                    title="Alterar PIN"
-                 >
-                    🔑 <span className="hidden sm:inline">PIN</span>
-                 </button>
-                 <button 
-                    onClick={() => {
-                        localStorage.removeItem(`racha_ai_user_${groupId}`)
-                        setCurrentUserId(null)
-                        router.push('/')
-                    }}
-                    className="text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 md:px-3 md:py-1 px-4 py-2 rounded border border-slate-600 transition-colors"
-                    title="Desconectar deste dispositivo"
-                 >
-                    🔄 <span className="hidden sm:inline">Desconectar</span>
-                 </button>
-                 <button 
-                    onClick={() => {
-                        if (currentUserId) handleRemoveUser(currentUserId)
-                    }}
-                    className="text-sm bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 md:px-3 md:py-1 px-4 py-2 rounded transition-colors"
-                    title="Sair do grupo e apagar dados"
-                >
-                    🚪 <span className="hidden sm:inline">Sair</span>
-                </button>
+                    <button 
+                        onClick={() => {
+                            localStorage.removeItem(`racha_ai_user_${groupId}`)
+                            setCurrentUserId(null)
+                            router.push('/')
+                        }}
+                        className="text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1 rounded border border-slate-600 transition-colors"
+                        title="Desconectar deste dispositivo (Logout)"
+                    >
+                        🔄 Logout
+                    </button>
+                    <button 
+                        onClick={() => {
+                            if (currentUserId) handleRemoveUser(currentUserId)
+                        }}
+                        className="text-sm bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 px-3 py-1 rounded transition-colors"
+                        title="Sair do grupo e apagar dados permanentemente"
+                    >
+                        🚪 Sair Definitivamente
+                    </button>
+                 </div>
+
+                 {/* Mobile Menu Button */}
+                 <div className="md:hidden">
+                    <button 
+                        onClick={() => setShowMobileMenu(!showMobileMenu)}
+                        className="text-slate-200 p-2 rounded-lg bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-colors"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM18.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+                        </svg>
+                    </button>
+                    
+                    {showMobileMenu && (
+                        <>
+                            {/* Backdrop */}
+                            <div 
+                                className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[1px]" 
+                                onClick={() => setShowMobileMenu(false)}
+                            />
+                            
+                            {/* Menu Dropdown */}
+                            <div className="absolute right-0 top-full mt-2 w-56 bg-slate-800 border border-slate-600 rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden animate-in slide-in-from-top-2 fade-in duration-200">
+                                {!justCreated && (
+                                    <button
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(window.location.href.split('?')[0])
+                                            showToast('Link copiado!', 'success')
+                                            setShowMobileMenu(false)
+                                        }}
+                                        className="px-4 py-3 text-left hover:bg-slate-700 text-slate-200 flex items-center gap-3 transition-colors border-b border-slate-700/50"
+                                    >
+                                        🔗 Copiar Link
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => {
+                                        setShowPinModal(true)
+                                        setShowMobileMenu(false)
+                                    }}
+                                    className="px-4 py-3 text-left hover:bg-slate-700 text-slate-200 flex items-center gap-3 transition-colors border-b border-slate-700/50"
+                                >
+                                    🔑 Alterar PIN
+                                </button>
+                                <button 
+                                    onClick={() => {
+                                        localStorage.removeItem(`racha_ai_user_${groupId}`)
+                                        setCurrentUserId(null)
+                                        router.push('/')
+                                    }}
+                                    className="px-4 py-3 text-left hover:bg-slate-700 text-slate-300 flex items-center gap-3 transition-colors border-b border-slate-700/50"
+                                >
+                                    🔄 Logout (Desconectar)
+                                </button>
+                                <button 
+                                    onClick={() => {
+                                        if (currentUserId) handleRemoveUser(currentUserId)
+                                        setShowMobileMenu(false)
+                                    }}
+                                    className="px-4 py-4 text-left hover:bg-red-900/20 text-red-400 font-medium flex items-center gap-3 transition-colors"
+                                >
+                                    🚪 Sair Definitivamente
+                                </button>
+                            </div>
+                        </>
+                    )}
+                 </div>
              </div>
            )}
         </div>
