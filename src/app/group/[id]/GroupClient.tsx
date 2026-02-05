@@ -227,9 +227,12 @@ export default function GroupClient({ groupId, groupName, users, expenses, lastU
                 if (isRemovingSelf) {
                     if (result && result.success) {
                         localStorage.removeItem(`racha_ai_user_${groupId}`)
-                        setCurrentUserId(null)
+                        // Don't set null immediately to avoid flashing the modal before redirect
+                        // setCurrentUserId(null) 
+                        
                         // Force full redirect to home
                         window.location.href = '/'
+                        return // Stop further execution
                     } else {
                          // Failed to remove self
                          showToast(result?.error || 'Erro ao sair do grupo', 'error')
