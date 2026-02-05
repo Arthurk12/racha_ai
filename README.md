@@ -101,3 +101,7 @@ Desenvolvido através de fluxo natural de prompts e colaboração IA + Humano, p
 ## 📝 Licença
 
 MIT
+
+## 📌 Todo List
+
+- [ ] Adicionar testes de regressão visual.
