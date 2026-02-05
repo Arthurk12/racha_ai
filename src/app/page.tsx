@@ -3,7 +3,6 @@
 import { createGroup } from './actions'
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Image from 'next/image'
 
 export default function Home() {
   const router = useRouter()
@@ -103,7 +102,9 @@ export default function Home() {
 
       <div className="max-w-md w-full bg-slate-800 rounded-lg shadow-xl p-8 border border-slate-700">
         <h1 className="text-3xl font-bold text-center mb-6 text-green-400 flex items-center justify-center gap-2">
-            <Image src="/icon" alt="Logo" width={32} height={32} className="rounded-full shadow-sm" />
+            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-sm">
+              R$
+            </div>
             Racha AI
         </h1>
         <p className="text-center text-slate-300 mb-8">
