@@ -104,4 +104,6 @@ MIT
 
 ## 📌 Todo List
 
-- [ ] Adicionar testes de regressão visual.
+- [ ] Adicionar testes de regressão visual:
+  - [x] Desktop
+  - [ ] Mobile
