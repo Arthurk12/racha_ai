@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { getUserColor } from '../lib/colors'
 import CustomSelect from './CustomSelect'
 
@@ -43,6 +43,8 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
   const [isDirectPayment, setIsDirectPayment] = useState(false)
   const participantsRef = useRef<HTMLDivElement>(null)
   const dateInputRef = useRef<HTMLInputElement>(null)
+  const textDateInputRef = useRef<HTMLInputElement>(null)
+  const cursorPositionRef = useRef<number | null>(null)
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -103,16 +105,28 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
   }, [currentUserId])
   
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const pos = e.target.selectionStart ?? e.target.value.length
+    const prevLen = e.target.value.length
     let v = e.target.value.replace(/\D/g, '')
     if (v.length > 8) v = v.slice(0, 8)
-    
+
+    let formatted = v
     if (v.length > 4) {
-        v = `${v.slice(0, 2)}/${v.slice(2, 4)}/${v.slice(4)}`
+        formatted = `${v.slice(0, 2)}/${v.slice(2, 4)}/${v.slice(4)}`
     } else if (v.length > 2) {
-        v = `${v.slice(0, 2)}/${v.slice(2)}`
+        formatted = `${v.slice(0, 2)}/${v.slice(2)}`
     }
-    setDate(v)
+    cursorPositionRef.current = pos + (formatted.length - prevLen)
+    setDate(formatted)
   }
+
+  useLayoutEffect(() => {
+    if (cursorPositionRef.current !== null && textDateInputRef.current) {
+      const pos = Math.max(0, Math.min(cursorPositionRef.current, textDateInputRef.current.value.length))
+      textDateInputRef.current.setSelectionRange(pos, pos)
+      cursorPositionRef.current = null
+    }
+  })
 
   const handlePickerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.target.value // YYYY-MM-DD
@@ -210,6 +224,7 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
            <label className="block text-sm font-medium text-slate-400 mb-1">Data</label>
            <div className="relative">
               <input
+              ref={textDateInputRef}
               type="text"
               inputMode="numeric"
               maxLength={10}
@@ -220,28 +235,12 @@ export default function ExpenseList({ users, expenses, addExpense, removeExpense
               className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 text-white placeholder-slate-500"
               />
               <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                  <div 
-                      className="relative w-6 h-6 cursor-pointer hover:text-green-400 transition-colors"
-                      onClick={() => {
-                          try {
-                            const input = dateInputRef.current
-                            if (!input) return
-                            
-                            if (typeof (input as any).showPicker === 'function') {
-                                (input as any).showPicker()
-                            } else {
-                                input.click()
-                            }
-                          } catch (e) {
-                              console.error(e)
-                          }
-                      }}
-                  >
-                      <input 
+                  <div className="relative w-6 h-6 cursor-pointer hover:text-green-400 transition-colors">
+                      <input
                           ref={dateInputRef}
-                          type="date" 
+                          type="date"
                           onChange={handlePickerChange}
-                          className="absolute inset-0 w-full h-full opacity-0 pointer-events-none"
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                           tabIndex={-1}
                       />
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-inherit pointer-events-none">

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useLayoutEffect, useRef } from 'react'
 
 interface User {
   id: string
@@ -61,6 +61,8 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
   const [editDate, setEditDate] = useState('')
   const [editParticipants, setEditParticipants] = useState<string[]>([])
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false)
+  const editDateInputRef = useRef<HTMLInputElement>(null)
+  const editCursorPositionRef = useRef<number | null>(null)
 
   const startEditing = (expense: Expense) => {
     setEditingId(expense.id)
@@ -122,16 +124,28 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
   }
 
   const handleEditDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const pos = e.target.selectionStart ?? e.target.value.length
+    const prevLen = e.target.value.length
     let v = e.target.value.replace(/\D/g, '')
     if (v.length > 8) v = v.slice(0, 8)
-    
+
+    let formatted = v
     if (v.length > 4) {
-        v = `${v.slice(0, 2)}/${v.slice(2, 4)}/${v.slice(4)}`
+        formatted = `${v.slice(0, 2)}/${v.slice(2, 4)}/${v.slice(4)}`
     } else if (v.length > 2) {
-        v = `${v.slice(0, 2)}/${v.slice(2)}`
+        formatted = `${v.slice(0, 2)}/${v.slice(2)}`
     }
-    setEditDate(v)
+    editCursorPositionRef.current = pos + (formatted.length - prevLen)
+    setEditDate(formatted)
   }
+
+  useLayoutEffect(() => {
+    if (editCursorPositionRef.current !== null && editDateInputRef.current) {
+      const pos = Math.max(0, Math.min(editCursorPositionRef.current, editDateInputRef.current.value.length))
+      editDateInputRef.current.setSelectionRange(pos, pos)
+      editCursorPositionRef.current = null
+    }
+  })
   
   const handleEditPickerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.target.value // YYYY-MM-DD
@@ -218,6 +232,7 @@ export default function ExpenseHistory({ users, expenses, removeExpense, updateE
                              {isEditing ? (
                                 <div className="relative w-28">
                                     <input
+                                        ref={editDateInputRef}
                                         type="text"
                                         value={editDate}
                                         onChange={handleEditDateChange}
