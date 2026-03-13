@@ -38,22 +38,29 @@ async function main() {
 
     console.log(`Found ${ids.length} groups to remove.`)
 
-    // 2. Delete Relational Data
+    // 2. Delete ExpenseParticipant first (FK references both Expense and User)
+    const participants = await prisma.expenseParticipant.deleteMany({
+        where: { expense: { groupId: { in: ids } } }
+    })
+    console.log(`Deleted ${participants.count} expense participants.`)
+
+    // 3. Delete Expenses
     const expenses = await prisma.expense.deleteMany({
         where: { groupId: { in: ids } }
     })
     console.log(`Deleted ${expenses.count} expenses.`)
 
+    // 4. Delete Users
     const users = await prisma.user.deleteMany({
         where: { groupId: { in: ids } }
     })
     console.log(`Deleted ${users.count} users.`)
 
-    // 3. Delete Groups
+    // 5. Delete Groups
     const groups = await prisma.group.deleteMany({
         where: { id: { in: ids } }
     })
-    
+
     console.log(`Deleted ${groups.count} groups successfully.`)
     
   } catch (e) {
